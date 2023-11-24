@@ -1,0 +1,16 @@
+---
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+
+  staticcheck:
+    go: "1.21"
+    # https://staticcheck.io/docs/options#checks
+    checks: ["all"]
+
+  gocognit:
+    min-complexity: 20
+
+  forbidigo:
+    forbid:
+      - ^fmt\.Print.*$

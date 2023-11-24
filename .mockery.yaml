@@ -1,0 +1,36 @@
+---
+with-expecter: true
+
+mockname: "{{.InterfaceName}}"
+outpkg: mocks
+filename: "{{.MockName}}.go"
+packages:
+  github.com/kujilabo/redstart/user/domain:
+    config:
+      # inpackage: True
+    #   keeptree: False
+      dir: user/domain/mocks
+    interfaces:
+      AppUserModel:
+    #   BambooRequestProducer:
+    #   BambooRequestConsumer:
+    #   BambooResultSubscriber:
+    #   BambooResultPublisher:
+    #   BambooHeartbeatPublisher:
+    #   BambooWorker:
+    #   SubscribeFunc:
+    #   CloseSubscribeConnectionFunc:
+  github.com/kujilabo/redstart/user/service:
+    config:
+      dir: user/service/mocks
+    interfaces:
+      TransactionManager:
+      AppUserRepository:
+      TicketRepository:
+      RepositoryFactory:
+      TicketCreator:
+  github.com/kujilabo/redstart/user/usecase:
+    config:
+      dir: user/usecase/mocks
+    interfaces:
+      TicketCreatorUsecase:

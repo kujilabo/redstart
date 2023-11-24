@@ -1,0 +1,17 @@
+---
+packageConfigs:
+  "github.com/kujilabo/redstart/user/domain":
+    forbiddenPackages:
+      - net/http
+      - database/sql
+      - gorm.io/gorm
+      - github.com/foo/bar/repository
+  "github.com/kujilabo/redstart/user/service":
+    forbiddenPackages:
+      - github.com/foo/bar/repository
+      - "net/http"
+  "main":
+    forbiddenPackages:
+      - "net/http"
+
+debug: false

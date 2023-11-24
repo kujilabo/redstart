@@ -1,0 +1,16 @@
+---
+version: '3'
+services:
+  test-mysql:
+    image: mysql:8.0.27
+    container_name: test-mysql
+    command: mysqld --character-set-server=utf8mb4
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      TZ: "Etc/GMT"
+    ports:
+      - 3307:3306
