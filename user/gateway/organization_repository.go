@@ -52,10 +52,6 @@ func (e *organizationEntity) toModel() (service.Organization, error) {
 }
 
 func NewOrganizationRepository(ctx context.Context, db *gorm.DB) service.OrganizationRepository {
-	if db == nil {
-		panic(errors.New("db is nil"))
-	}
-
 	return &organizationRepository{
 		db: db,
 	}
@@ -129,7 +125,7 @@ func (r *organizationRepository) AddOrganization(ctx context.Context, operator d
 	}
 
 	if result := r.db.Create(&organization); result.Error != nil {
-		return nil, liberrors.Errorf("libD.Validator.Struct. err: %w", libgateway.ConvertDuplicatedError(result.Error, service.ErrOrganizationAlreadyExists))
+		return nil, liberrors.Errorf("db.Create. err: %w", libgateway.ConvertDuplicatedError(result.Error, service.ErrOrganizationAlreadyExists))
 	}
 
 	organizationID, err := domain.NewOrganizationID(organization.ID)

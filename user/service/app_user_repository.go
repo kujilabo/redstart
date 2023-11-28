@@ -66,12 +66,16 @@ func (p *appUserAddParameter) GetPassword() string {
 // 	return p.Details
 // }
 
+type Option string
+
+var IncludeRoles Option = "IncludeRoles"
+
 type AppUserRepository interface {
 	FindSystemOwnerByOrganizationID(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (SystemOwner, error)
 
-	FindSystemOwnerByOrganizationName(ctx context.Context, operator domain.SystemAdminModel, organizationName string) (SystemOwner, error)
+	FindSystemOwnerByOrganizationName(ctx context.Context, operator domain.SystemAdminModel, organizationName string, options ...Option) (SystemOwner, error)
 
-	FindAppUserByID(ctx context.Context, operator domain.AppUserModel, id domain.AppUserID) (AppUser, error)
+	FindAppUserByID(ctx context.Context, operator domain.AppUserModel, id domain.AppUserID, options ...Option) (AppUser, error)
 
 	FindAppUserByLoginID(ctx context.Context, operator domain.AppUserModel, loginID string) (AppUser, error)
 

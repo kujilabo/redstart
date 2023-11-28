@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 
@@ -10,25 +11,6 @@ import (
 	libgateway "github.com/kujilabo/redstart/lib/gateway"
 	"github.com/kujilabo/redstart/user/domain"
 	"github.com/kujilabo/redstart/user/service"
-)
-
-var (
-	AppUserTableName = "app_user"
-
-	SystemAdminLoginID = "__system_admin"
-	SystemOwnerLoginID = "__system_owner"
-
-	SystemOwnerRoleKey = "__system_owner"
-	OwnerRoleKey       = "__owner"
-	// SystemStudentLoginID = "system-student"
-	// GuestLoginID         = "guest"
-
-	// AdministratorRole = "Administrator"
-	OwnerRole = "_owner"
-	// ManagerRole       = "Manager"
-	// UserRole          = "User"
-	// GuestRole         = "Guest"
-	// UnknownRole       = "Unknown"
 )
 
 type appUserRepository struct {
@@ -54,64 +36,7 @@ func (e *appUserEntity) TableName() string {
 	return AppUserTableName
 }
 
-func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory) (service.SystemOwner, error) {
-	if e.LoginID != SystemOwnerLoginID {
-		return nil, liberrors.Errorf("invalid system owner. loginID: %s", e.LoginID)
-	}
-
-	baseModel, err := e.toBaseModel()
-	if err != nil {
-		return nil, liberrors.Errorf("e.toBaseModel. err: %w", err)
-	}
-
-	appUserID, err := domain.NewAppUserID(e.ID)
-	if err != nil {
-		return nil, liberrors.Errorf("domain.NewAppUserModel. err: %w", err)
-	}
-
-	organizationID, err := domain.NewOrganizationID(e.OrganizationID)
-	if err != nil {
-		return nil, liberrors.Errorf("domain.NewOrganizationID. err: %w", err)
-	}
-
-	appUserModel, err := domain.NewAppUserModel(baseModel, appUserID, organizationID, e.LoginID, e.Username)
-	if err != nil {
-		return nil, liberrors.Errorf("domain.NewAppUserModel. err: %w", err)
-	}
-
-	ownerModel, err := domain.NewOwnerModel(appUserModel)
-	if err != nil {
-		return nil, liberrors.Errorf("domain.NewOwnerModel. err: %w", err)
-	}
-
-	systemOwnerModel, err := domain.NewSystemOwnerModel(ownerModel)
-	if err != nil {
-		return nil, liberrors.Errorf("domain.NewSystemOwnerModel. err: %w", err)
-	}
-
-	systemOwner, err := service.NewSystemOwner(ctx, rf, systemOwnerModel)
-	if err != nil {
-		return nil, liberrors.Errorf("service.NewSystemOwner. err: %w", err)
-	}
-
-	return systemOwner, nil
-}
-
-func (e *appUserEntity) toOwner(rf service.RepositoryFactory) (service.Owner, error) {
-	appUserModel, err := e.toAppUserModel()
-	if err != nil {
-		return nil, liberrors.Errorf("e.toAppUserModel. err: %w", err)
-	}
-
-	ownerModel, err := domain.NewOwnerModel(appUserModel)
-	if err != nil {
-		return nil, liberrors.Errorf("domain.NewOwnerModel. err: %w", err)
-	}
-
-	return service.NewOwner(rf, ownerModel), nil
-}
-
-func (e *appUserEntity) toAppUserModel() (domain.AppUserModel, error) {
+func (e *appUserEntity) toAppUserModel(userRoles []domain.UserRoleModel) (domain.AppUserModel, error) {
 	baseModel, err := e.toBaseModel()
 	if err != nil {
 		return nil, liberrors.Errorf("e.toModel. err: %w", err)
@@ -127,7 +52,7 @@ func (e *appUserEntity) toAppUserModel() (domain.AppUserModel, error) {
 		return nil, liberrors.Errorf("domain.NewOrganizationID. err: %w", err)
 	}
 
-	appUserModel, err := domain.NewAppUserModel(baseModel, appUserID, organizationID, e.LoginID, e.Username)
+	appUserModel, err := domain.NewAppUserModel(baseModel, appUserID, organizationID, e.LoginID, e.Username, userRoles)
 	if err != nil {
 		return nil, liberrors.Errorf("domain.NewAppUserModel. err: %w", err)
 	}
@@ -135,10 +60,56 @@ func (e *appUserEntity) toAppUserModel() (domain.AppUserModel, error) {
 	return appUserModel, nil
 }
 
-func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory) (service.AppUser, error) {
-	appUserModel, err := e.toAppUserModel()
+func (e *appUserEntity) toOwnerModel(userRoles []domain.UserRoleModel) (domain.OwnerModel, error) {
+	appUserModel, err := e.toAppUserModel(userRoles)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel. err: %w", err)
+	}
+
+	ownerModel, err := domain.NewOwnerModel(appUserModel)
+	if err != nil {
+		return nil, liberrors.Errorf("domain.NewOwnerModel. err: %w", err)
+	}
+
+	return ownerModel, nil
+}
+
+func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userRoles []domain.UserRoleModel) (service.SystemOwner, error) {
+	if e.LoginID != SystemOwnerLoginID {
+		return nil, liberrors.Errorf("invalid system owner. loginID: %s", e.LoginID)
+	}
+
+	ownerModel, err := e.toOwnerModel(userRoles)
+	if err != nil {
+		return nil, liberrors.Errorf("e.toOwnerModel(). err: %w", err)
+	}
+
+	systemOwnerModel, err := domain.NewSystemOwnerModel(ownerModel)
+	if err != nil {
+		return nil, liberrors.Errorf("domain.NewSystemOwnerModel. err: %w", err)
+	}
+
+	systemOwner, err := service.NewSystemOwner(ctx, rf, systemOwnerModel)
+	if err != nil {
+		return nil, liberrors.Errorf("service.NewSystemOwner. err: %w", err)
+	}
+
+	return systemOwner, nil
+}
+
+func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userRoles []domain.UserRoleModel) (service.Owner, error) {
+	ownerModel, err := e.toOwnerModel(userRoles)
+	if err != nil {
+		return nil, liberrors.Errorf("e.toOwnerModel(). err: %w", err)
+	}
+
+	return service.NewOwner(rf, ownerModel), nil
+}
+
+func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userRoles []domain.UserRoleModel) (service.AppUser, error) {
+	appUserModel, err := e.toAppUserModel(userRoles)
+	if err != nil {
+		return nil, liberrors.Errorf("e.toAppUserModel(). err: %w", err)
 	}
 
 	appUser, err := service.NewAppUser(ctx, rf, appUserModel)
@@ -148,32 +119,6 @@ func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFact
 
 	return appUser, nil
 }
-
-// func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory) (service.AppUser, error) {
-// 	appUserModel, err := e.toAppUserModel()
-// 	if err != nil {
-// 		return nil, liberrors.Errorf("e.toAppUserModel. err: %w", err)
-// 	}
-
-// 	appUser, err := service.NewAppUser(ctx, rf, appUserModel)
-// 	if err != nil {
-// 		return nil, liberrors.Errorf("service.NewAppUser. err: %w", err)
-// 	}
-
-// 	return appUser, nil
-// }
-
-// func NewAppUserRepository(ctx context.Context, rf service.RepositoryFactory, db *gorm.DB) service.AppUserRepository {
-// 	if rf == nil {
-// 		panic(errors.New("rf is nil"))
-// 	} else if db == nil {
-// 		panic(errors.New("db is nil"))
-// 	}
-// 	return &appUserRepository{
-// 		rf: rf,
-// 		db: db,
-// 	}
-// }
 
 func NewAppUserRepository(ctx context.Context, driverName string, db *gorm.DB, rf service.RepositoryFactory) service.AppUserRepository {
 	return &appUserRepository{
@@ -187,18 +132,19 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context,
 	defer span.End()
 
 	appUser := appUserEntity{}
-	if result := r.db.Where("organization_id = ?", organizationID).
-		Where("login_id = ? and removed = 0", SystemOwnerLoginID).
-		First(&appUser); result.Error != nil {
+	wrappedDB := wrappedDB{db: r.db, organizationID: organizationID}
+	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", SystemOwnerLoginID).db
+	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, liberrors.Errorf("system owner not found. organization ID: %d, err: %w", organizationID, service.ErrSystemOwnerNotFound)
 		}
 		return nil, result.Error
 	}
-	return appUser.toSystemOwner(ctx, r.rf)
+
+	return appUser.toSystemOwner(ctx, r.rf, nil)
 }
 
-func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Context, operator domain.SystemAdminModel, organizationName string) (service.SystemOwner, error) {
+func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Context, operator domain.SystemAdminModel, organizationName string, options ...service.Option) (service.SystemOwner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindSystemOwnerByOrganizationName")
 	defer span.End()
 
@@ -214,17 +160,36 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 
 		return nil, result.Error
 	}
-	return appUser.toSystemOwner(ctx, r.rf)
+
+	appUserModel, err := appUser.toAppUserModel(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	userRoles := []domain.UserRoleModel{}
+	for _, option := range options {
+		if option == service.IncludeRoles {
+			pairOfUserAndRoleRepo := r.rf.NewPairOfUserAndRoleRepository(ctx)
+			userRolesTmp, err := pairOfUserAndRoleRepo.FindUserRolesByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
+			if err != nil {
+				return nil, err
+			}
+
+			userRoles = userRolesTmp
+		}
+	}
+
+	return appUser.toSystemOwner(ctx, r.rf, userRoles)
 }
 
-func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain.AppUserModel, id domain.AppUserID) (service.AppUser, error) {
+func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain.AppUserModel, id domain.AppUserID, options ...service.Option) (service.AppUser, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByID")
 	defer span.End()
 
 	appUser := appUserEntity{}
-	if result := r.db.Where("organization_id = ?", operator.GetOrganizationID().Int()).
-		Where("id = ? and removed = 0", id.Int()).
-		First(&appUser); result.Error != nil {
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	db := wrappedDB.WhereAppUser().Where("`app_user`.`id` = ?", id.Int()).db
+	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrAppUserNotFound
 		}
@@ -232,7 +197,30 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain
 		return nil, result.Error
 	}
 
-	return appUser.toAppUser(ctx, r.rf)
+	appUserModel, err := appUser.toAppUserModel(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	userRoles := []domain.UserRoleModel{}
+
+	fmt.Printf("len option: %d\n", len(options))
+	for _, option := range options {
+		fmt.Printf("option: %s\n", option)
+		if option == service.IncludeRoles {
+			pairOfUserAndRoleRepo := r.rf.NewPairOfUserAndRoleRepository(ctx)
+			userRolesTmp, err := pairOfUserAndRoleRepo.FindUserRolesByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
+			if err != nil {
+				return nil, err
+			}
+
+			userRoles = userRolesTmp
+		}
+	}
+
+	fmt.Println(userRoles)
+
+	return appUser.toAppUser(ctx, r.rf, userRoles)
 }
 
 func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator domain.AppUserModel, loginID string) (service.AppUser, error) {
@@ -240,9 +228,9 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator d
 	defer span.End()
 
 	appUser := appUserEntity{}
-	if result := r.db.Where("organization_id = ?", operator.GetOrganizationID().Int()).
-		Where("login_id = ? and removed = 0", loginID).
-		First(&appUser); result.Error != nil {
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", loginID).db
+	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrAppUserNotFound
 		}
@@ -250,7 +238,7 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator d
 		return nil, result.Error
 	}
 
-	return appUser.toAppUser(ctx, r.rf)
+	return appUser.toAppUser(ctx, r.rf, nil)
 }
 
 func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator domain.SystemOwnerModel, loginID string) (service.Owner, error) {
@@ -258,10 +246,18 @@ func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator dom
 	defer span.End()
 
 	appUser := appUserEntity{}
-	if result := r.db.Where(&appUserEntity{
-		OrganizationID: operator.GetOrganizationID().Int(),
-		LoginID:        loginID,
-	}).First(&appUser); result.Error != nil {
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	db := wrappedDB.Table("`app_user`").Select("`app_user`.*").
+		WherePairOfUserAndRole().
+		WhereUserRole().
+		WhereAppUser().
+		Where("`app_user`.`login_id` = ?", loginID).
+		Where("`user_role`.`key` = ? ", OwnerRoleKey).
+		Joins("inner join `user_n_role` on `app_user`.`id` = `user_n_role`.`app_user_id`").
+		Joins("inner join `user_role` on `user_n_role`.`user_role_id` = `user_role`.`id`").
+		db
+
+	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrAppUserNotFound
 		}
@@ -269,7 +265,7 @@ func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator dom
 		return nil, result.Error
 	}
 
-	return appUser.toOwner(r.rf)
+	return appUser.toOwner(r.rf, nil)
 }
 
 func (r *appUserRepository) addAppUser(ctx context.Context, appUserEntity *appUserEntity) (domain.AppUserID, error) {
@@ -305,7 +301,7 @@ func (r *appUserRepository) AddAppUser(ctx context.Context, operator domain.Owne
 			CreatedBy: operator.GetAppUserID().Int(),
 			UpdatedBy: operator.GetAppUserID().Int(),
 		},
-		OrganizationID: operator.GetAppUserID().Int(),
+		OrganizationID: operator.GetOrganizationID().Int(),
 		LoginID:        param.GetLoginID(),
 		Username:       param.GetUsername(),
 		HashedPassword: hashedPassword,
@@ -357,9 +353,9 @@ func (r *appUserRepository) AddFirstOwner(ctx context.Context, operator domain.S
 			CreatedBy: operator.GetAppUserID().Int(),
 			UpdatedBy: operator.GetAppUserID().Int(),
 		},
-		OrganizationID: operator.GetAppUserID().Int(),
-		LoginID:        SystemOwnerLoginID,
-		Username:       "SystemOwner",
+		OrganizationID: operator.GetOrganizationID().Int(),
+		LoginID:        param.GetLoginID(),
+		Username:       param.GetUsername(),
 		HashedPassword: hashedPassword,
 	}
 

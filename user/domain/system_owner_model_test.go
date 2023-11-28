@@ -19,7 +19,7 @@ func TestNewSystemOwner(t *testing.T) {
 	require.NoError(t, err)
 	organizationID, err := NewOrganizationID(1)
 	require.NoError(t, err)
-	appUser, err := NewAppUserModel(model, appUserID, organizationID, "LOGIN_ID", "USERNAME")
+	appUser, err := NewAppUserModel(model, appUserID, organizationID, "LOGIN_ID", "USERNAME", nil)
 	assert.NoError(t, err)
 	ower, err := NewOwnerModel(appUser)
 	assert.NoError(t, err)

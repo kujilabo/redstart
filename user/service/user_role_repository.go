@@ -47,11 +47,10 @@ type UserRoleRepository interface {
 	FindSystemOwnerRole(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (UserRole, error)
 
 	FindUserRoleByKey(ctx context.Context, operator domain.AppUserModel, key string) (UserRole, error)
-
-	// AddUserRole(ctx context.Context, operator domain.AppUserModel, parameter UserRoleAddParameter) (domain.UserRoleID, error)
-
+	FindUserRoleByID(ctx context.Context, operator domain.AppUserModel, userRoleID domain.UserRoleID) (UserRole, error)
 	AddOwnerRole(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (domain.UserRoleID, error)
 
 	AddSystemOwnerRole(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (domain.UserRoleID, error)
-	// AddPersonalGroup(operator SystemOwner, studentID uint) (uint, error)
+
+	AddUserRole(ctx context.Context, operator domain.OwnerModel, parameter UserRoleAddParameter) (domain.UserRoleID, error)
 }

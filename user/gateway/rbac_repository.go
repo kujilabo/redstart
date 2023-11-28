@@ -81,13 +81,13 @@ func (r *rbacRepository) initEnforcer() (*casbin.Enforcer, error) {
 	return e, nil
 }
 
-func (r *rbacRepository) AddNamedPolicy(subject domain.RBACRole, object domain.RBACObject, action domain.RBACAction) error {
+func (r *rbacRepository) AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction) error {
 	e, err := r.initEnforcer()
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
 
-	if _, err := e.AddNamedPolicy("p", string(subject), string(object), string(action)); err != nil {
+	if _, err := e.AddNamedPolicy("p", subject.Subject(), object.Object(), action.Action()); err != nil {
 		return liberrors.Errorf("e.AddNamedPolicy. err: %w", err)
 	}
 
@@ -103,20 +103,20 @@ func (r *rbacRepository) AddNamedGroupingPolicy(subject domain.RBACUser, object 
 		return errors.Errorf("Nil")
 	}
 
-	if _, err := e.AddNamedGroupingPolicy("g", string(subject), string(object)); err != nil {
+	if _, err := e.AddNamedGroupingPolicy("g", subject.Subject(), object.Role()); err != nil {
 		return liberrors.Errorf("e.AddNamedGroupingPolicy. err: %w", err)
 	}
 
 	return nil
 }
 
-func (r *rbacRepository) NewEnforcerWithRolesAndUsers(roles []domain.RBACRole, users []domain.RBACUser) (*casbin.Enforcer, error) {
+func (r *rbacRepository) NewEnforcerWithGroupsAndUsers(groups []domain.RBACRole, users []domain.RBACUser) (*casbin.Enforcer, error) {
 	subjects := make([]string, 0)
-	for _, s := range roles {
-		subjects = append(subjects, string(s))
+	for _, s := range groups {
+		subjects = append(subjects, s.Role())
 	}
 	for _, s := range users {
-		subjects = append(subjects, string(s))
+		subjects = append(subjects, s.Subject())
 	}
 	e, err := r.initEnforcer()
 	if err != nil {
@@ -127,3 +127,23 @@ func (r *rbacRepository) NewEnforcerWithRolesAndUsers(roles []domain.RBACRole, u
 	}
 	return e, nil
 }
+
+// func (r *rbacRepository) CanDo(ctx context.Context, operatorID domain.AppUserID, ticketID domain.TicketID, action domain.RBACAction) (bool, error) {
+// 	rbacRepo := r.rf.NewRBACRepository(ctx)
+
+// 	roleObjects := r.getAllRolesForTicket(ticketID)
+// 	userObject := NewRBACAppUser(operatorID)
+// 	e, err := rbacRepo.NewEnforcerWithRolesAndUsers(roleObjects, []domain.RBACUser{userObject})
+// 	if err != nil {
+// 		return false, liberrors.Errorf("failed to NewEnforcerWithRolesAndUsers. err: %w", err)
+// 	}
+
+// 	ticketObject := NewRBACTicketObject(ticketID)
+
+// 	ok, err := e.Enforce(string(userObject), string(ticketObject), string(action))
+// 	if err != nil {
+// 		return false, liberrors.Errorf("e.Enforce. err: %w", err)
+// 	}
+
+// 	return ok, nil
+// }

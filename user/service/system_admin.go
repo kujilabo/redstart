@@ -90,7 +90,7 @@ func (m *systemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 		return nil, err
 	}
 
-	systemOwner, err := m.initSystemOwner(ctx, organizationID, systemOwnerRoleID, param.GetName())
+	systemOwner, err := m.initSystemOwner(ctx, systemOwnerRoleID, organizationID, param.GetName())
 	if err != nil {
 		return nil, liberrors.Errorf("m.initSystemOwner. error: %w", err)
 	}
@@ -127,8 +127,7 @@ func (m *systemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 
 func (m *systemAdmin) initSystemOwner(ctx context.Context, systemOwnerRoleID domain.UserRoleID, organizationID domain.OrganizationID, organizationName string) (SystemOwner, error) {
 	// add system-owner
-	systemOwnerID, err := m.appUserRepo.AddSystemOwner(ctx, m, organizationID)
-	if err != nil {
+	if _, err := m.appUserRepo.AddSystemOwner(ctx, m, organizationID); err != nil {
 		return nil, liberrors.Errorf("failed to AddSystemOwner. error: %w", err)
 	}
 
@@ -139,7 +138,8 @@ func (m *systemAdmin) initSystemOwner(ctx context.Context, systemOwnerRoleID dom
 
 	// systen-owner <-> system-owner-role
 	pairOfUserAndRole := m.rf.NewPairOfUserAndRoleRepository(ctx)
-	if err := pairOfUserAndRole.AddPairOfUserAndRole(ctx, systemOwner, systemOwnerRoleID, systemOwnerID); err != nil {
+
+	if err := pairOfUserAndRole.AddPairOfUserAndRoleToSystemOwner(ctx, m, systemOwner, systemOwnerRoleID); err != nil {
 		return nil, err
 	}
 
@@ -158,7 +158,7 @@ func (m *systemAdmin) initFirstOwner(ctx context.Context, systemOwner SystemOwne
 
 	// owner <-> owner-role
 	pairOfUserAndRole := m.rf.NewPairOfUserAndRoleRepository(ctx)
-	if err := pairOfUserAndRole.AddPairOfUserAndRole(ctx, systemOwner, ownerRoleID, ownerID); err != nil {
+	if err := pairOfUserAndRole.AddPairOfUserAndRole(ctx, systemOwner, ownerID, ownerRoleID); err != nil {
 		return nil, err
 	}
 
@@ -173,6 +173,15 @@ func (m *systemAdmin) initFirstOwner(ctx context.Context, systemOwner SystemOwne
 		return nil, liberrors.Errorf("failed to AddGroupUser. error: %w", err)
 	}
 
+	//
+	rbacRepo := m.rf.NewRBACRepository(ctx)
+	rbacAppUser := NewRBACAppUser(ownerID)
+	rbacAllUserRolesObject := NewRBACAllUserRoleObject()
+
+	if err := rbacRepo.AddNamedPolicy(rbacAppUser, rbacAllUserRolesObject, RBACSetAction); err != nil {
+		return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
+	}
+
 	owner, err := m.appUserRepo.FindOwnerByLoginID(ctx, systemOwner, param.GetLoginID())
 	if err != nil {
 		return nil, liberrors.Errorf("failed to FindOwnerByLoginID. error: %w", err)
@@ -180,3 +189,25 @@ func (m *systemAdmin) initFirstOwner(ctx context.Context, systemOwner SystemOwne
 
 	return owner, nil
 }
+
+func NewRBACAppUser(appUserID domain.AppUserID) domain.RBACUser {
+	return domain.NewRBACUser(fmt.Sprintf("user_%d", appUserID.Int()))
+}
+
+//	func NewRBACUserRole(userRoleID domain.UserRoleID) domain.RBACRole {
+//		return domain.NewRBACRole(fmt.Sprintf("role_%d", userRoleID.Int()))
+//	}
+func NewRBACUserRole(key string) domain.RBACRole {
+	return domain.NewRBACRole(fmt.Sprintf("role_%s", key))
+}
+
+func NewRBACUserRoleObject(userRoleID domain.UserRoleID) domain.RBACObject {
+	return domain.NewRBACObject(fmt.Sprintf("role_%d", userRoleID.Int()))
+}
+
+func NewRBACAllUserRoleObject() domain.RBACObject {
+	return domain.NewRBACObject("role_*")
+}
+
+var RBACSetAction = domain.NewRBACAction("Set")
+var RBACUnsetAction = domain.NewRBACAction("Unset")

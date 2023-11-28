@@ -45,7 +45,7 @@ func openMySQLForTest() (*gorm.DB, error) {
 		),
 	})
 	if err != nil {
-		return nil, liberrors.Errorf("gorm.Open. dns:%s, err: %w", dsn, err)
+		return nil, liberrors.Errorf("gorm.Open. err: %w", err)
 	}
 	return db, nil
 }

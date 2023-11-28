@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	invalidOrgID domain.OrganizationID
+	invalidOrgID     domain.OrganizationID
+	invalidAppUserID domain.AppUserID
 )
 
 func init() {
@@ -18,6 +19,12 @@ func init() {
 		panic(err)
 	}
 	invalidOrgID = invalidOrgIDTmp
+
+	invalidAppUserIDTmp, err := domain.NewAppUserID(99999)
+	if err != nil {
+		panic(err)
+	}
+	invalidAppUserID = invalidAppUserIDTmp
 
 	fns := []func() (*gorm.DB, error){
 		func() (*gorm.DB, error) {

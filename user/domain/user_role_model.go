@@ -9,6 +9,7 @@ import (
 
 type UserRoleID interface {
 	Int() int
+	IsUserRoleID() bool
 }
 
 type userRoleID struct {
@@ -23,6 +24,9 @@ func NewUserRoleID(value int) (UserRoleID, error) {
 
 func (v *userRoleID) Int() int {
 	return v.Value
+}
+func (v *userRoleID) IsUserRoleID() bool {
+	return true
 }
 
 type UserRoleModel interface {

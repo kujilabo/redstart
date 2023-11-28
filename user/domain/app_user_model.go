@@ -8,6 +8,7 @@ import (
 
 type AppUserID interface {
 	Int() int
+	IsAppUserID() bool
 }
 
 type appUserID struct {
@@ -23,6 +24,9 @@ func NewAppUserID(value int) (AppUserID, error) {
 func (v *appUserID) Int() int {
 	return v.Value
 }
+func (v *appUserID) IsAppUserID() bool {
+	return true
+}
 
 type AppUserModel interface {
 	libdomain.BaseModel
@@ -30,6 +34,7 @@ type AppUserModel interface {
 	GetOrganizationID() OrganizationID
 	GetLoginID() string
 	GetUsername() string
+	GetUserRoles() []UserRoleModel
 }
 
 type appUserModel struct {
@@ -38,15 +43,17 @@ type appUserModel struct {
 	OrganizationID OrganizationID
 	LoginID        string `validate:"required"`
 	Username       string `validate:"required"`
+	UserRoles      []UserRoleModel
 }
 
-func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string) (AppUserModel, error) {
+func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userRoles []UserRoleModel) (AppUserModel, error) {
 	m := &appUserModel{
 		BaseModel:      baseModel,
 		AppUserID:      appUserID,
 		OrganizationID: organizationID,
 		LoginID:        loginID,
 		Username:       username,
+		UserRoles:      userRoles,
 	}
 
 	if err := libdomain.Validator.Struct(m); err != nil {
@@ -70,4 +77,8 @@ func (m *appUserModel) GetLoginID() string {
 
 func (m *appUserModel) GetUsername() string {
 	return m.Username
+}
+
+func (m *appUserModel) GetUserRoles() []UserRoleModel {
+	return m.UserRoles
 }

@@ -3,19 +3,23 @@ package gateway
 import (
 	"database/sql"
 	"embed"
+	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4/database"
 	migrate_sqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	gorm_logrus "github.com/onrik/gorm-logrus"
-	"gorm.io/driver/sqlite"
+	slog_gorm "github.com/orandin/slog-gorm"
+	gorm_sqlite "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-func OpenSQLite(filePath string) (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open(filePath), &gorm.Config{
-		Logger: gorm_logrus.New(),
+func OpenSQLite(filePath string, logger *slog.Logger) (*gorm.DB, error) {
+	return gorm.Open(gorm_sqlite.Open(filePath), &gorm.Config{
+		Logger: slog_gorm.New(
+			slog_gorm.WithLogger(logger), // Optional, use slog.Default() by default
+			slog_gorm.WithTraceAll(),     // trace all messages
+		),
 	})
 }
 
@@ -25,6 +29,7 @@ func MigrateSQLiteDB(db *gorm.DB, sqlFS embed.FS) error {
 	if err != nil {
 		return err
 	}
+
 	return migrateDB(db, "sqlite3", sourceDriver, func(sqlDB *sql.DB) (database.Driver, error) {
 		return migrate_sqlite3.WithInstance(sqlDB, &migrate_sqlite3.Config{})
 	})

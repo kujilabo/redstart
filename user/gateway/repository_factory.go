@@ -50,7 +50,7 @@ func (f *repositoryFactory) NewPairOfUserAndGroupRepository(ctx context.Context)
 }
 
 func (f *repositoryFactory) NewPairOfUserAndRoleRepository(ctx context.Context) service.PairOfUserAndRoleRepository {
-	return NewPairOfUserAndRoleRepository(ctx, f.db)
+	return NewPairOfUserAndRoleRepository(ctx, f.db, f)
 }
 
 func (f *repositoryFactory) NewRBACRepository(ctx context.Context) service.RBACRepository {

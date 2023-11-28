@@ -7,5 +7,9 @@ import (
 )
 
 type PairOfUserAndRoleRepository interface {
-	AddPairOfUserAndRole(ctx context.Context, operator domain.AppUserModel, userRoleID domain.UserGroupID, appUserID domain.AppUserID) error
+	AddPairOfUserAndRoleToSystemOwner(ctx context.Context, operator domain.SystemAdminModel, systemOwner domain.SystemOwnerModel, userRoleID domain.UserRoleID) error
+
+	AddPairOfUserAndRole(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID, userRoleID domain.UserRoleID) error
+
+	FindUserRolesByUserID(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID) ([]domain.UserRoleModel, error)
 }

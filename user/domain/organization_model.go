@@ -7,6 +7,7 @@ import (
 
 type OrganizationID interface {
 	Int() int
+	IsOrganizationID() bool
 }
 
 type organizationID struct {
@@ -21,6 +22,9 @@ func NewOrganizationID(value int) (OrganizationID, error) {
 
 func (v *organizationID) Int() int {
 	return v.Value
+}
+func (v *organizationID) IsOrganizationID() bool {
+	return true
 }
 
 type OrganizationModel interface {

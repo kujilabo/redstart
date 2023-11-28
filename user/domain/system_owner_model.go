@@ -9,7 +9,7 @@ const SystemOwnerID = 2
 
 type SystemOwnerModel interface {
 	OwnerModel
-	// IsSystemOwnerModel() bool
+	IsSystemOwnerModel() bool
 }
 
 type systemOwnerModel struct {
@@ -29,6 +29,6 @@ func NewSystemOwnerModel(appUser OwnerModel) (SystemOwnerModel, error) {
 	return m, nil
 }
 
-// func (m *systemOwnerModel) IsSystemOwnerModel() bool {
-// 	return true
-// }
+func (m *systemOwnerModel) IsSystemOwnerModel() bool {
+	return true
+}
