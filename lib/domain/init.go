@@ -11,5 +11,6 @@ type ContextKey string
 var (
 	Validator = validator.New()
 
-	ErrInvalidArgument = errors.New("invalid argument")
+	ErrInvalidArgument  = errors.New("invalid argument")
+	ErrPermissionDenied = errors.New("permission denied")
 )

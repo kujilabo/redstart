@@ -109,8 +109,8 @@ func (r *userRoleRepository) FindUserRoleByKey(ctx context.Context, operator dom
 	defer span.End()
 
 	userRole := userRoleEntity{}
-	if result := r.db.Where("organization_id = ?", operator.GetOrganizationID().Int()).
-		Where("key = ? and removed = 0", key).
+	if result := r.db.Where("`organization_id` = ?", operator.GetOrganizationID().Int()).
+		Where("`key` = ? and `removed` = 0", key).
 		Find(&userRole); result.Error != nil {
 		return nil, result.Error
 	}

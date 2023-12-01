@@ -2,11 +2,10 @@ package gateway
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"gorm.io/gorm"
 
+	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 	libgateway "github.com/kujilabo/redstart/lib/gateway"
 	"github.com/kujilabo/redstart/user/domain"
@@ -63,7 +62,7 @@ func (r *pairOfUserAndRoleRepository) AddPairOfUserAndRole(ctx context.Context, 
 		return err
 	}
 	if !ok {
-		return errors.New("Forbidden")
+		return libdomain.ErrPermissionDenied
 	}
 
 	userRoleRepo := r.rf.NewUserRoleRepository(ctx)
@@ -138,8 +137,6 @@ func (r *pairOfUserAndRoleRepository) enforce(ctx context.Context, operator doma
 }
 
 func (r *pairOfUserAndRoleRepository) FindUserRolesByUserID(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID) ([]domain.UserRoleModel, error) {
-
-	fmt.Printf("---------%d, %d\n", operator.GetAppUserID().Int(), appUserID.Int())
 	userRoles := []userRoleEntity{}
 	if result := r.db.Table("user_role").Select("user_role.*").
 		Where("user_role.organization_id = ?", operator.GetOrganizationID().Int()).
@@ -148,6 +145,7 @@ func (r *pairOfUserAndRoleRepository) FindUserRolesByUserID(ctx context.Context,
 		Where("app_user.id = ? and app_user.removed = 0", appUserID.Int()).
 		Joins("inner join user_n_role on user_role.id = user_n_role.user_role_id").
 		Joins("inner join app_user on user_n_role.app_user_id = app_user.id").
+		Order("`user_role`.`key`").
 		Find(&userRoles); result.Error != nil {
 		return nil, result.Error
 	}
@@ -161,6 +159,5 @@ func (r *pairOfUserAndRoleRepository) FindUserRolesByUserID(ctx context.Context,
 		userRoleModels[i] = m
 	}
 
-	fmt.Printf("xxxxxxxxxxxx %d\n", len(userRoleModels))
 	return userRoleModels, nil
 }
