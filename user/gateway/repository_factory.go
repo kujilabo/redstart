@@ -37,20 +37,12 @@ func (f *repositoryFactory) NewAppUserRepository(ctx context.Context) service.Ap
 	return NewAppUserRepository(ctx, f.driverName, f.db, f)
 }
 
-func (f *repositoryFactory) NewUserRoleRepository(ctx context.Context) service.UserRoleRepository {
-	return NewUserRoleRepository(ctx, f.db)
-}
-
 func (f *repositoryFactory) NewUserGroupRepository(ctx context.Context) service.UserGroupRepository {
 	return NewUserGroupRepository(ctx, f.db)
 }
 
 func (f *repositoryFactory) NewPairOfUserAndGroupRepository(ctx context.Context) service.PairOfUserAndGroupRepository {
-	return NewPairOfUserAndGroupRepository(ctx, f.db)
-}
-
-func (f *repositoryFactory) NewPairOfUserAndRoleRepository(ctx context.Context) service.PairOfUserAndRoleRepository {
-	return NewPairOfUserAndRoleRepository(ctx, f.db, f)
+	return NewPairOfUserAndGroupRepository(ctx, f.db, f)
 }
 
 func (f *repositoryFactory) NewRBACRepository(ctx context.Context) service.RBACRepository {

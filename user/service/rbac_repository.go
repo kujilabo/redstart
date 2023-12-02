@@ -9,7 +9,7 @@ import (
 type RBACRepository interface {
 	Init() error
 
-	AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction) error
+	AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction, effect domain.RBACEffect) error
 
 	AddNamedGroupingPolicy(subject domain.RBACUser, object domain.RBACRole) error
 

@@ -78,14 +78,12 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
 
 	appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
-	userRoleRepo := gateway.NewUserRoleRepository(ctx, ts.db)
-	userGroupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
-	pairOfUserAndRole := gateway.NewPairOfUserAndRoleRepository(ctx, ts.db, ts.rf)
-	pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db)
+	userGorupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
+	pairOfUserAndRole := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
 	rbacRepo := gateway.NewRBACRepository(ctx, ts.db)
 
-	rbacSysOwnerRole := service.NewRBACUserRole(gateway.SystemOwnerRoleKey)
-	rbacOwnerRole := service.NewRBACUserRole(gateway.OwnerRoleKey)
+	rbacSysOwnerRole := service.NewRBACUserRole(gateway.SystemOwnerGroupKey)
+	rbacOwnerRole := service.NewRBACUserRole(gateway.OwnerGroupKey)
 	rbacAllUserRolesObject := service.NewRBACAllUserRoleObject()
 
 	// add organization
@@ -94,11 +92,11 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	assert.Greater(t, orgID.Int(), 0)
 
 	// add system-owner-role
-	sysOwnerRoleID, err := userRoleRepo.AddSystemOwnerRole(ctx, sysAd, orgID)
+	sysOwnerRoleID, err := userGorupRepo.AddSystemOwnerGroup(ctx, sysAd, orgID)
 	require.NoError(t, err)
 
 	// add owner role
-	ownerRoleID, err := userRoleRepo.AddOwnerRole(ctx, sysAd, orgID)
+	ownerRoleID, err := userGorupRepo.AddOwnerGroup(ctx, sysAd, orgID)
 	require.NoError(t, err)
 
 	// add system-owner
@@ -106,15 +104,15 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	require.NoError(t, err)
 	require.Greater(t, sysOwnerID.Int(), 0)
 
-	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(bg, sysAd, orgName, service.IncludeRoles)
+	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(bg, sysAd, orgName, service.IncludeGroups)
 	require.NoError(t, err)
 
 	// system-owner-role can set all roles
-	err = rbacRepo.AddNamedPolicy(rbacSysOwnerRole, rbacAllUserRolesObject, service.RBACSetAction)
+	err = rbacRepo.AddNamedPolicy(rbacSysOwnerRole, rbacAllUserRolesObject, service.RBACSetAction, service.RBACAllowEffect)
 	require.NoError(t, err)
 
 	// systen-owner <-> system-owner-role
-	err = pairOfUserAndRole.AddPairOfUserAndRoleToSystemOwner(ctx, sysAd, sysOwner, sysOwnerRoleID)
+	err = pairOfUserAndRole.AddPairOfUserAndGroupToSystemOwner(ctx, sysAd, sysOwner, sysOwnerRoleID)
 	require.NoError(t, err)
 
 	// add owner
@@ -123,20 +121,11 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	require.Greater(t, ownerID.Int(), 0)
 
 	// owner-role can set all roles
-	err = rbacRepo.AddNamedPolicy(rbacOwnerRole, rbacAllUserRolesObject, service.RBACSetAction)
+	err = rbacRepo.AddNamedPolicy(rbacOwnerRole, rbacAllUserRolesObject, service.RBACSetAction, service.RBACAllowEffect)
 	require.NoError(t, err)
 
 	// owner <-> owner-role
-	err = pairOfUserAndRole.AddPairOfUserAndRole(ctx, sysOwner, ownerID, ownerRoleID)
-	require.NoError(t, err)
-
-	// add public group
-	publicGroupID, err := userGroupRepo.AddPublicGroup(ctx, sysOwner)
-	require.NoError(t, err)
-	require.Greater(t, publicGroupID.Int(), 0)
-
-	// public-group <-> owner
-	err = pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, sysOwner, publicGroupID, ownerID)
+	err = pairOfUserAndRole.AddPairOfUserAndGroup(ctx, sysOwner, ownerID, ownerRoleID)
 	require.NoError(t, err)
 
 	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.GetLoginID())
@@ -213,31 +202,18 @@ func testAddAppUser(t *testing.T, ctx context.Context, ts testService, owner dom
 	return user1
 }
 
-func testAddUserRole(t *testing.T, ctx context.Context, ts testService, owner domain.OwnerModel, key, name, description string) service.UserRole {
-	userRoleRepo := ts.rf.NewUserRoleRepository(ctx)
-	roleID1, err := userRoleRepo.AddUserRole(ctx, owner, testNewUserRoleAddParameter(t, key, name, description))
+func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner domain.OwnerModel, key, name, description string) service.UserGroup {
+	userGorupRepo := ts.rf.NewUserGroupRepository(ctx)
+	groupID1, err := userGorupRepo.AddUserGroup(ctx, owner, testNewUserGroupAddParameter(t, key, name, description))
 	require.NoError(t, err)
-	role1, err := userRoleRepo.FindUserRoleByID(ctx, owner, roleID1)
+	group1, err := userGorupRepo.FindUserGroupByID(ctx, owner, groupID1)
 	require.NoError(t, err)
-	require.Equal(t, key, role1.GetKey())
-	require.Equal(t, name, role1.GetName())
-	require.Equal(t, description, role1.GetDescription())
+	require.Equal(t, key, group1.GetKey())
+	require.Equal(t, name, group1.GetName())
+	require.Equal(t, description, group1.GetDescription())
 
-	return role1
+	return group1
 }
-
-// func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner domain.OwnerModel, key, name, description string) service.UserGroup {
-// 	userGroupRepo := ts.rf.NewUserGroupRepository(ctx)
-// 	roleID1, err := userGroupRepo.AddUserGroup(ctx, owner, testNewUserRoleAddParameter(t, key, name, description))
-// 	require.NoError(t, err)
-// 	role1, err := userRoleRepo.FindUserGroupByID(ctx, owner, roleID1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, key, role1.GetKey())
-// 	require.Equal(t, name, role1.GetName())
-// 	require.Equal(t, description, role1.GetDescription())
-
-// 	return role1
-// }
 
 func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) service.AppUserAddParameter {
 	p, err := service.NewAppUserAddParameter(loginID, username, password)
@@ -245,8 +221,8 @@ func testNewAppUserAddParameter(t *testing.T, loginID, username, password string
 	return p
 }
 
-func testNewUserRoleAddParameter(t *testing.T, key, name, description string) service.UserRoleAddParameter {
-	p, err := service.NewUserRoleAddParameter(key, name, description)
+func testNewUserGroupAddParameter(t *testing.T, key, name, description string) service.UserGroupAddParameter {
+	p, err := service.NewUserGroupAddParameter(key, name, description)
 	require.NoError(t, err)
 	return p
 }

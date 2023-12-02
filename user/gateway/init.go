@@ -12,11 +12,11 @@ var (
 	SystemAdminLoginID = "__system_admin"
 	SystemOwnerLoginID = "__system_owner"
 
-	SystemOwnerRoleKey = "__system_owner"
-	OwnerRoleKey       = "__owner"
+	SystemOwnerGroupKey = "__system_owner"
+	OwnerGroupKey       = "__owner"
 
-	SystemOwnerRoleName = "System Owner"
-	OwnerRoleName       = "Owner"
+	SystemOwnerGroupName = "System Owner"
+	OwnerGroupName       = "Owner"
 	// SystemStudentLoginID = "system-student"
 	// GuestLoginID         = "guest"
 

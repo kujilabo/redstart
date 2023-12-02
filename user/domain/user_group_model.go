@@ -1,12 +1,15 @@
 package domain
 
 import (
+	"strings"
+
 	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
 type UserGroupID interface {
 	Int() int
+	IsUserGroupID() bool
 }
 
 type userGroupID struct {
@@ -22,6 +25,9 @@ func NewUserGroupID(value int) (UserGroupID, error) {
 func (v *userGroupID) Int() int {
 	return v.Value
 }
+func (v *userGroupID) IsUserGroupID() bool {
+	return true
+}
 
 type UserGroupModel interface {
 	libdomain.BaseModel
@@ -30,6 +36,7 @@ type UserGroupModel interface {
 	GetKey() string
 	GetName() string
 	GetDescription() string
+	IsSystemGroup() bool
 }
 
 type userGroupModel struct {
@@ -77,4 +84,8 @@ func (m *userGroupModel) GetName() string {
 
 func (m *userGroupModel) GetDescription() string {
 	return m.Description
+}
+
+func (m *userGroupModel) IsSystemGroup() bool {
+	return strings.HasPrefix(m.Key, "__")
 }

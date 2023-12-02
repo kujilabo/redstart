@@ -36,7 +36,7 @@ func (e *appUserEntity) TableName() string {
 	return AppUserTableName
 }
 
-func (e *appUserEntity) toAppUserModel(userRoles []domain.UserRoleModel) (domain.AppUserModel, error) {
+func (e *appUserEntity) toAppUserModel(userGroups []domain.UserGroupModel) (domain.AppUserModel, error) {
 	baseModel, err := e.toBaseModel()
 	if err != nil {
 		return nil, liberrors.Errorf("e.toModel. err: %w", err)
@@ -52,7 +52,7 @@ func (e *appUserEntity) toAppUserModel(userRoles []domain.UserRoleModel) (domain
 		return nil, liberrors.Errorf("domain.NewOrganizationID. err: %w", err)
 	}
 
-	appUserModel, err := domain.NewAppUserModel(baseModel, appUserID, organizationID, e.LoginID, e.Username, userRoles)
+	appUserModel, err := domain.NewAppUserModel(baseModel, appUserID, organizationID, e.LoginID, e.Username, userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("domain.NewAppUserModel. err: %w", err)
 	}
@@ -60,8 +60,8 @@ func (e *appUserEntity) toAppUserModel(userRoles []domain.UserRoleModel) (domain
 	return appUserModel, nil
 }
 
-func (e *appUserEntity) toOwnerModel(userRoles []domain.UserRoleModel) (domain.OwnerModel, error) {
-	appUserModel, err := e.toAppUserModel(userRoles)
+func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (domain.OwnerModel, error) {
+	appUserModel, err := e.toAppUserModel(userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel. err: %w", err)
 	}
@@ -74,12 +74,12 @@ func (e *appUserEntity) toOwnerModel(userRoles []domain.UserRoleModel) (domain.O
 	return ownerModel, nil
 }
 
-func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userRoles []domain.UserRoleModel) (service.SystemOwner, error) {
+func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (service.SystemOwner, error) {
 	if e.LoginID != SystemOwnerLoginID {
 		return nil, liberrors.Errorf("invalid system owner. loginID: %s", e.LoginID)
 	}
 
-	ownerModel, err := e.toOwnerModel(userRoles)
+	ownerModel, err := e.toOwnerModel(userGroup)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toOwnerModel(). err: %w", err)
 	}
@@ -97,8 +97,8 @@ func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.Repository
 	return systemOwner, nil
 }
 
-func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userRoles []domain.UserRoleModel) (service.Owner, error) {
-	ownerModel, err := e.toOwnerModel(userRoles)
+func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (service.Owner, error) {
+	ownerModel, err := e.toOwnerModel(userGroup)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toOwnerModel(). err: %w", err)
 	}
@@ -106,8 +106,8 @@ func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userRoles []domain
 	return service.NewOwner(rf, ownerModel), nil
 }
 
-func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userRoles []domain.UserRoleModel) (service.AppUser, error) {
-	appUserModel, err := e.toAppUserModel(userRoles)
+func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userGroups []domain.UserGroupModel) (service.AppUser, error) {
+	appUserModel, err := e.toAppUserModel(userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel(). err: %w", err)
 	}
@@ -166,20 +166,20 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 		return nil, err
 	}
 
-	userRoles := []domain.UserRoleModel{}
+	userGroups := []domain.UserGroupModel{}
 	for _, option := range options {
-		if option == service.IncludeRoles {
-			pairOfUserAndRoleRepo := r.rf.NewPairOfUserAndRoleRepository(ctx)
-			userRolesTmp, err := pairOfUserAndRoleRepo.FindUserRolesByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
+		if option == service.IncludeGroups {
+			pairOfUserAndGroupRepo := r.rf.NewPairOfUserAndGroupRepository(ctx)
+			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
 			if err != nil {
 				return nil, err
 			}
 
-			userRoles = userRolesTmp
+			userGroups = userGroupsTmp
 		}
 	}
 
-	return appUser.toSystemOwner(ctx, r.rf, userRoles)
+	return appUser.toSystemOwner(ctx, r.rf, userGroups)
 }
 
 func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain.AppUserModel, id domain.AppUserID, options ...service.Option) (service.AppUser, error) {
@@ -202,25 +202,25 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain
 		return nil, err
 	}
 
-	userRoles := []domain.UserRoleModel{}
+	userGroups := []domain.UserGroupModel{}
 
 	fmt.Printf("len option: %d\n", len(options))
 	for _, option := range options {
 		fmt.Printf("option: %s\n", option)
-		if option == service.IncludeRoles {
-			pairOfUserAndRoleRepo := r.rf.NewPairOfUserAndRoleRepository(ctx)
-			userRolesTmp, err := pairOfUserAndRoleRepo.FindUserRolesByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
+		if option == service.IncludeGroups {
+			pairOfUserAndGroupRepo := r.rf.NewPairOfUserAndGroupRepository(ctx)
+			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
 			if err != nil {
 				return nil, err
 			}
 
-			userRoles = userRolesTmp
+			userGroups = userGroupsTmp
 		}
 	}
 
-	fmt.Println(userRoles)
+	fmt.Println(userGroups)
 
-	return appUser.toAppUser(ctx, r.rf, userRoles)
+	return appUser.toAppUser(ctx, r.rf, userGroups)
 }
 
 func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator domain.AppUserModel, loginID string) (service.AppUser, error) {
@@ -248,13 +248,13 @@ func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator dom
 	appUser := appUserEntity{}
 	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
 	db := wrappedDB.Table("`app_user`").Select("`app_user`.*").
-		WherePairOfUserAndRole().
-		WhereUserRole().
+		WherePairOfUserAndGroup().
+		WhereUserGroup().
 		WhereAppUser().
 		Where("`app_user`.`login_id` = ?", loginID).
-		Where("`user_role`.`key` = ? ", OwnerRoleKey).
-		Joins("inner join `user_n_role` on `app_user`.`id` = `user_n_role`.`app_user_id`").
-		Joins("inner join `user_role` on `user_n_role`.`user_role_id` = `user_role`.`id`").
+		Where("`user_group`.`key` = ? ", OwnerGroupKey).
+		Joins("inner join `user_n_group` on `app_user`.`id` = `user_n_group`.`app_user_id`").
+		Joins("inner join `user_group` on `user_n_group`.`user_group_id` = `user_group`.`id`").
 		db
 
 	if result := db.First(&appUser); result.Error != nil {

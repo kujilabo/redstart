@@ -14,20 +14,37 @@ import (
 	"github.com/kujilabo/redstart/user/service"
 )
 
-const conf = `[request_definition]
+// [request_definition]
+// r = sub, obj, act
+
+// [policy_definition]
+// p = sub, obj, act
+
+// [role_definition]
+// g = _, _
+
+// [policy_effect]
+// e = some(where (p.eft == allow))
+
+// [matchers]
+// m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+
+const conf = `
+[request_definition]
 r = sub, obj, act
 
 [policy_definition]
-p = sub, obj, act
+p = sub, obj, act, eft
 
 [role_definition]
 g = _, _
+g2 = _, _
 
 [policy_effect]
-e = some(where (p.eft == allow))
+e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
 
 [matchers]
-m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+m = g(r.sub, p.sub) && g2(r.obj, p.obj) && r.act == p.act
 `
 
 type rbacRepository struct {
@@ -81,13 +98,13 @@ func (r *rbacRepository) initEnforcer() (*casbin.Enforcer, error) {
 	return e, nil
 }
 
-func (r *rbacRepository) AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction) error {
+func (r *rbacRepository) AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction, effect domain.RBACEffect) error {
 	e, err := r.initEnforcer()
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
 
-	if _, err := e.AddNamedPolicy("p", subject.Subject(), object.Object(), action.Action()); err != nil {
+	if _, err := e.AddNamedPolicy("p", subject.Subject(), object.Object(), action.Action(), effect.Effect()); err != nil {
 		return liberrors.Errorf("e.AddNamedPolicy. err: %w", err)
 	}
 

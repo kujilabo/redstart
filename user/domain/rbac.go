@@ -76,3 +76,19 @@ func NewRBACAction(value string) RBACAction {
 func (r *rbacAction) Action() string {
 	return r.value
 }
+
+type RBACEffect interface {
+	Effect() string
+}
+
+type rbacEffect struct {
+	value string
+}
+
+func NewRBACEffect(value string) RBACEffect {
+	return &rbacEffect{value: value}
+}
+
+func (r *rbacEffect) Effect() string {
+	return r.value
+}

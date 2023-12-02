@@ -51,9 +51,10 @@ func (x *wrappedDB) WhereAppUser() *wrappedDB {
 	return x.WhereOrganizationID(&appUserEntity{}, x.organizationID).WhereNotRemoved(&appUserEntity{})
 }
 
-func (x *wrappedDB) WhereUserRole() *wrappedDB {
-	return x.WhereOrganizationID(&userRoleEntity{}, x.organizationID).WhereNotRemoved(&userRoleEntity{})
+func (x *wrappedDB) WhereUserGroup() *wrappedDB {
+	return x.WhereOrganizationID(&userGroupEntity{}, x.organizationID).WhereNotRemoved(&userGroupEntity{})
 }
-func (x *wrappedDB) WherePairOfUserAndRole() *wrappedDB {
-	return x.WhereOrganizationID(&pairOfUserAndRoleEntity{}, x.organizationID)
+
+func (x *wrappedDB) WherePairOfUserAndGroup() *wrappedDB {
+	return x.WhereOrganizationID(&pairOfUserAndGroupEntity{}, x.organizationID)
 }

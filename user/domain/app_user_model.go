@@ -34,7 +34,7 @@ type AppUserModel interface {
 	GetOrganizationID() OrganizationID
 	GetLoginID() string
 	GetUsername() string
-	GetUserRoles() []UserRoleModel
+	GetUserGroups() []UserGroupModel
 }
 
 type appUserModel struct {
@@ -43,17 +43,17 @@ type appUserModel struct {
 	OrganizationID OrganizationID
 	LoginID        string `validate:"required"`
 	Username       string `validate:"required"`
-	UserRoles      []UserRoleModel
+	UserGroups     []UserGroupModel
 }
 
-func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userRoles []UserRoleModel) (AppUserModel, error) {
+func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userGroups []UserGroupModel) (AppUserModel, error) {
 	m := &appUserModel{
 		BaseModel:      baseModel,
 		AppUserID:      appUserID,
 		OrganizationID: organizationID,
 		LoginID:        loginID,
 		Username:       username,
-		UserRoles:      userRoles,
+		UserGroups:     userGroups,
 	}
 
 	if err := libdomain.Validator.Struct(m); err != nil {
@@ -79,6 +79,6 @@ func (m *appUserModel) GetUsername() string {
 	return m.Username
 }
 
-func (m *appUserModel) GetUserRoles() []UserRoleModel {
-	return m.UserRoles
+func (m *appUserModel) GetUserGroups() []UserGroupModel {
+	return m.UserGroups
 }
