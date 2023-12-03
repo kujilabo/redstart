@@ -70,7 +70,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	sysAd, err := service.NewSystemAdmin(ctx, ts.rf)
 	require.NoError(t, err)
 
-	firstOwnerAddParam, err := service.NewFirstOwnerAddParameter("OWNER_ID", "OWNER_NAME", "")
+	firstOwnerAddParam, err := service.NewFirstOwnerAddParameter("OWNER_ID", "OWNER_NAME", "OWNER_PASSWORD")
 	require.NoError(t, err)
 	orgAddParam, err := service.NewOrganizationAddParameter(orgName, firstOwnerAddParam)
 	require.NoError(t, err)
@@ -82,10 +82,6 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	pairOfUserAndRole := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
 	rbacRepo := gateway.NewRBACRepository(ctx, ts.db)
 
-	rbacSysOwnerRole := service.NewRBACUserRole(gateway.SystemOwnerGroupKey)
-	rbacOwnerRole := service.NewRBACUserRole(gateway.OwnerGroupKey)
-	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject()
-
 	// add organization
 	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)
 	require.NoError(t, err)
@@ -94,11 +90,11 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	rbacDomain := service.NewRBACOrganization(orgID)
 
 	// add system-owner-group
-	sysOwnerRoleID, err := userGorupRepo.AddSystemOwnerGroup(ctx, sysAd, orgID)
+	sysOwnerGroupID, err := userGorupRepo.AddSystemOwnerGroup(ctx, sysAd, orgID)
 	require.NoError(t, err)
 
-	// add owner role
-	ownerRoleID, err := userGorupRepo.AddOwnerGroup(ctx, sysAd, orgID)
+	// add owner-group
+	ownerGroupID, err := userGorupRepo.AddOwnerGroup(ctx, sysAd, orgID)
 	require.NoError(t, err)
 
 	// add system-owner
@@ -109,25 +105,31 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(bg, sysAd, orgName, service.IncludeGroups)
 	require.NoError(t, err)
 
+	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject(orgID)
+
+	rbacSysOwnerRole := service.NewRBACUserRole(orgID, sysOwnerGroupID)
+
 	// those who belong to system-owner-group can set all roles
 	err = rbacRepo.AddPolicy(rbacDomain, rbacSysOwnerRole, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
 	require.NoError(t, err)
 
-	// systen-owner <-> system-owner-role
-	err = pairOfUserAndRole.AddPairOfUserAndGroupToSystemOwner(ctx, sysAd, sysOwner, sysOwnerRoleID)
+	// systen-owner belongs to system-owner-group
+	err = pairOfUserAndRole.AddPairOfUserAndGroupToSystemOwner(ctx, sysAd, sysOwner, sysOwnerGroupID)
 	require.NoError(t, err)
 
 	// add owner
-	ownerID, err := appUserRepo.AddFirstOwner(ctx, sysOwner, firstOwnerAddParam)
+	ownerID, err := appUserRepo.AddAppUser(ctx, sysOwner, firstOwnerAddParam)
 	require.NoError(t, err)
 	require.Greater(t, ownerID.Int(), 0)
+
+	rbacOwnerRole := service.NewRBACUserRole(orgID, ownerGroupID)
 
 	// owner-role can set all roles
 	err = rbacRepo.AddPolicy(rbacDomain, rbacOwnerRole, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
 	require.NoError(t, err)
 
-	// owner <-> owner-role
-	err = pairOfUserAndRole.AddPairOfUserAndGroup(ctx, sysOwner, ownerID, ownerRoleID)
+	// owner belongs to owner-group
+	err = pairOfUserAndRole.AddPairOfUserAndGroup(ctx, sysOwner, ownerID, ownerGroupID)
 	require.NoError(t, err)
 
 	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.GetLoginID())

@@ -70,7 +70,7 @@ func Test_pairOfUserAndGroupRepository_AddPairOfUserAndGroup(t *testing.T) {
 
 		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
 		userGroupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
-		ownerGroup, err := userGroupRepo.FindUserGroupByKey(ctx, owner, gateway.OwnerGroupKey)
+		ownerGroup, err := userGroupRepo.FindUserGroupByKey(ctx, owner, service.OwnerGroupKey)
 		require.NoError(t, err)
 
 		// when

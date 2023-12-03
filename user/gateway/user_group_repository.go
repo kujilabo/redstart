@@ -84,7 +84,7 @@ func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator
 	userGroup := userGroupEntity{}
 	if result := r.db.Where(&userGroupEntity{
 		OrganizationID: organizationID.Int(),
-		Key:            SystemOwnerGroupKey,
+		Key:            service.SystemOwnerGroupKey,
 	}).Find(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
@@ -128,8 +128,8 @@ func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator 
 			UpdatedBy: operator.GetAppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
-		Key:            SystemOwnerGroupKey,
-		Name:           SystemOwnerGroupName,
+		Key:            service.SystemOwnerGroupKey,
+		Name:           service.SystemOwnerGroupName,
 	}
 	if result := r.db.Create(&userGroup); result.Error != nil {
 		return nil, liberrors.Errorf(". err: %w", libgateway.ConvertDuplicatedError(result.Error, service.ErrAppUserAlreadyExists))
@@ -154,8 +154,8 @@ func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator domain
 			UpdatedBy: operator.GetAppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
-		Key:            OwnerGroupKey,
-		Name:           OwnerGroupName,
+		Key:            service.OwnerGroupKey,
+		Name:           service.OwnerGroupName,
 	}
 	if result := r.db.Create(&userGroup); result.Error != nil {
 		return nil, liberrors.Errorf(". err: %w", libgateway.ConvertDuplicatedError(result.Error, service.ErrAppUserAlreadyExists))

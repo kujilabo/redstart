@@ -22,7 +22,7 @@ type FirstOwnerAddParameter interface {
 type firstOwnerAddParameter struct {
 	LoginID  string `validate:"required"`
 	Username string `validate:"required"`
-	Password string
+	Password string `validate:"required"`
 }
 
 func NewFirstOwnerAddParameter(loginID, username, password string) (FirstOwnerAddParameter, error) {

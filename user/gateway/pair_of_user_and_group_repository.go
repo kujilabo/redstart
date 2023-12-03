@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 
@@ -43,7 +44,9 @@ func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroupToSystemOwner(ctx co
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.AddPairOfUserAndGroupToSystemOwner")
 	defer span.End()
 
-	if err := r.add(ctx, operator.GetAppUserID(), systemOwner.GetOrganizationID(), systemOwner.GetAppUserID(), userGroupID, SystemOwnerGroupKey); err != nil {
+	if err := r.add(ctx, operator.GetAppUserID(), systemOwner.GetOrganizationID(), systemOwner.GetAppUserID(), userGroupID,
+	/* service.SystemOwnerGroupKey*/
+	); err != nil {
 		return nil
 	}
 
@@ -54,10 +57,9 @@ func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroup(ctx context.Context
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.AddPairOfUserAndGroup")
 	defer span.End()
 
-	rbacAllUserRoleObject := service.NewRBACAllUserRolesObject()
-	rbacUserRoleObject := service.NewRBACUserRoleObject(userGroupID)
+	rbacUserRoleObject := service.NewRBACUserRoleObject(operator.GetOrganizationID(), userGroupID)
 
-	ok, err := r.enforce(ctx, operator, []domain.RBACObject{rbacAllUserRoleObject, rbacUserRoleObject}, service.RBACSetAction)
+	ok, err := r.enforce(ctx, operator, rbacUserRoleObject, service.RBACSetAction)
 	if err != nil {
 		return err
 	}
@@ -65,19 +67,23 @@ func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroup(ctx context.Context
 		return libdomain.ErrPermissionDenied
 	}
 
-	userGroupRepo := r.rf.NewUserGroupRepository(ctx)
-	userGroup, err := userGroupRepo.FindUserGroupByID(ctx, operator, userGroupID)
-	if err != nil {
-		return err
-	}
+	// userGroupRepo := r.rf.NewUserGroupRepository(ctx)
+	// userGroup, err := userGroupRepo.FindUserGroupByID(ctx, operator, userGroupID)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if err := r.add(ctx, operator.GetAppUserID(), operator.GetOrganizationID(), appUserID, userGroupID, userGroup.GetKey()); err != nil {
+	if err := r.add(ctx, operator.GetAppUserID(), operator.GetOrganizationID(), appUserID, userGroupID, 
+	/*userGroup.GetKey()*/
+	); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *pairOfUserAndGroupRepository) add(ctx context.Context, operatorID domain.AppUserID, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID, userGroupKey string) error {
+func (r *pairOfUserAndGroupRepository) add(ctx context.Context, operatorID domain.AppUserID, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID, 
+	/*userGroupKey string*/
+	) error {
 	// add pairOfOuserAndRole
 	pairOfUserAndGroup := pairOfUserAndGroupEntity{
 		JunctionModelEntity: JunctionModelEntity{
@@ -92,8 +98,8 @@ func (r *pairOfUserAndGroupRepository) add(ctx context.Context, operatorID domai
 	}
 
 	rbacRepo := r.rf.NewRBACRepository(ctx)
-	rbacAppUser := service.NewRBACAppUser(appUserID)
-	rbacUserRole := service.NewRBACUserRole(userGroupKey)
+	rbacAppUser := service.NewRBACAppUser(organizationID, appUserID)
+	rbacUserRole := service.NewRBACUserRole(organizationID, userGroupID)
 	rbacDomain := service.NewRBACOrganization(organizationID)
 
 	// app-user belongs to user-role
@@ -104,7 +110,65 @@ func (r *pairOfUserAndGroupRepository) add(ctx context.Context, operatorID domai
 	return nil
 }
 
-func (r *pairOfUserAndGroupRepository) enforce(ctx context.Context, operator domain.AppUserModel, rbacObjects []domain.RBACObject, rbacAction domain.RBACAction) (bool, error) {
+func (r *pairOfUserAndGroupRepository) RemovePairOfUserAndGroup(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
+	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.RemovePairOfUserAndGroup")
+	defer span.End()
+
+	rbacUserRoleObject := service.NewRBACUserRoleObject(operator.GetOrganizationID(), userGroupID)
+
+	ok, err := r.enforce(ctx, operator, rbacUserRoleObject, service.RBACUnsetAction)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return libdomain.ErrPermissionDenied
+	}
+
+	// userGroupRepo := r.rf.NewUserGroupRepository(ctx)
+	// userGroup, err := userGroupRepo.FindUserGroupByID(ctx, operator, userGroupID)
+	// if err != nil {
+	// 	return err
+	// }
+
+	if err := r.remove(ctx, operator.GetAppUserID(), operator.GetOrganizationID(), appUserID, userGroupID, 
+	/*userGroup.GetKey()*/); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *pairOfUserAndGroupRepository) remove(ctx context.Context, operatorID domain.AppUserID, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID,
+
+/* userGroupKey string*/
+) error {
+	// remove pairOfOuserAndRole
+	wrappedDB := wrappedDB{db: r.db, organizationID: organizationID}
+	db := wrappedDB.
+		WherePairOfUserAndGroup().
+		Where("`app_user_id` = ?", appUserID.Int()).
+		Where("`user_group_id` = ?", userGroupID.Int()).
+		db
+	result := db.Delete(&pairOfUserAndGroupEntity{})
+	if result.Error != nil {
+		return liberrors.Errorf(". err: %w", libgateway.ConvertDuplicatedError(result.Error, service.ErrAppUserAlreadyExists))
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("ERROR")
+	}
+
+	rbacRepo := r.rf.NewRBACRepository(ctx)
+	rbacAppUser := service.NewRBACAppUser(organizationID, appUserID)
+	rbacUserRole := service.NewRBACUserRole(organizationID, userGroupID)
+	rbacDomain := service.NewRBACOrganization(organizationID)
+
+	// remove relationship
+	if err := rbacRepo.RemoveSubjectGroupingPolicy(rbacDomain, rbacAppUser, rbacUserRole); err != nil {
+		return liberrors.Errorf("rbacRepo.RemoveSubjectGroupingPolicy. err: %w", err)
+	}
+
+	return nil
+}
+func (r *pairOfUserAndGroupRepository) enforce(ctx context.Context, operator domain.AppUserModel, rbacObject domain.RBACObject, rbacAction domain.RBACAction) (bool, error) {
 	rbacDomain := service.NewRBACOrganization(operator.GetOrganizationID())
 
 	appUserRepo := r.rf.NewAppUserRepository(ctx)
@@ -115,24 +179,22 @@ func (r *pairOfUserAndGroupRepository) enforce(ctx context.Context, operator dom
 
 	rbacRoles := make([]domain.RBACRole, 0)
 	for _, userGroup := range appUser.GetUserGroups() {
-		rbacRoles = append(rbacRoles, service.NewRBACUserRole(userGroup.GetKey()))
+		rbacRoles = append(rbacRoles, service.NewRBACUserRole(operator.GetOrganizationID(), userGroup.GetUerGroupID()))
 	}
 
 	rbacRepo := r.rf.NewRBACRepository(ctx)
-	rbacOperator := service.NewRBACAppUser(operator.GetAppUserID())
+	rbacOperator := service.NewRBACAppUser(operator.GetOrganizationID(), operator.GetAppUserID())
 	e, err := rbacRepo.NewEnforcerWithGroupsAndUsers(rbacRoles, []domain.RBACUser{rbacOperator})
 	if err != nil {
 		return false, err
 	}
 
-	for _, object := range rbacObjects {
-		ok, err := e.Enforce(rbacOperator.Subject(), rbacDomain.Domain(), object.Object(), rbacAction.Action())
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
+	ok, err := e.Enforce(rbacOperator.Subject(), rbacObject.Object(), rbacAction.Action(), rbacDomain.Domain(), )
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
 	return false, nil

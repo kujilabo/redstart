@@ -75,7 +75,7 @@ func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (domain
 }
 
 func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (service.SystemOwner, error) {
-	if e.LoginID != SystemOwnerLoginID {
+	if e.LoginID != service.SystemOwnerLoginID {
 		return nil, liberrors.Errorf("invalid system owner. loginID: %s", e.LoginID)
 	}
 
@@ -133,7 +133,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context,
 
 	appUser := appUserEntity{}
 	wrappedDB := wrappedDB{db: r.db, organizationID: organizationID}
-	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", SystemOwnerLoginID).db
+	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", service.SystemOwnerLoginID).db
 	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, liberrors.Errorf("system owner not found. organization ID: %d, err: %w", organizationID, service.ErrSystemOwnerNotFound)
@@ -151,7 +151,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 	appUser := appUserEntity{}
 	if result := r.db.Table("organization").Select("app_user.*").
 		Where("organization.name = ? and app_user.removed = 0", organizationName).
-		Where("login_id = ?", SystemOwnerLoginID).
+		Where("login_id = ?", service.SystemOwnerLoginID).
 		Joins("inner join app_user on organization.id = app_user.organization_id").
 		First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -252,7 +252,7 @@ func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator dom
 		WhereUserGroup().
 		WhereAppUser().
 		Where("`app_user`.`login_id` = ?", loginID).
-		Where("`user_group`.`key` = ? ", OwnerGroupKey).
+		Where("`user_group`.`key` = ? ", service.OwnerGroupKey).
 		Joins("inner join `user_n_group` on `app_user`.`id` = `user_n_group`.`app_user_id`").
 		Joins("inner join `user_group` on `user_n_group`.`user_group_id` = `user_group`.`id`").
 		db
@@ -326,37 +326,8 @@ func (r *appUserRepository) AddSystemOwner(ctx context.Context, operator domain.
 			UpdatedBy: operator.GetAppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
-		LoginID:        SystemOwnerLoginID,
+		LoginID:        service.SystemOwnerLoginID,
 		Username:       "SystemOwner",
-	}
-
-	appUserID, err := r.addAppUser(ctx, &appUserEntity)
-	if err != nil {
-		return nil, err
-	}
-
-	return appUserID, nil
-}
-
-func (r *appUserRepository) AddFirstOwner(ctx context.Context, operator domain.SystemOwnerModel, param service.FirstOwnerAddParameter) (domain.AppUserID, error) {
-	_, span := tracer.Start(ctx, "appUserRepository.AddFirstOwner")
-	defer span.End()
-
-	hashedPassword, err := libgateway.HashPassword(param.GetPassword())
-	if err != nil {
-		return nil, liberrors.Errorf("passwordhelper.HashPassword. err: %w", err)
-	}
-
-	appUserEntity := appUserEntity{
-		BaseModelEntity: BaseModelEntity{
-			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
-		},
-		OrganizationID: operator.GetOrganizationID().Int(),
-		LoginID:        param.GetLoginID(),
-		Username:       param.GetUsername(),
-		HashedPassword: hashedPassword,
 	}
 
 	appUserID, err := r.addAppUser(ctx, &appUserEntity)

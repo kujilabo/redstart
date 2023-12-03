@@ -24,7 +24,7 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationID(t *testing.T) {
 		{
 			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAdModel, orgID)
 			require.NoError(t, err)
-			assert.Equal(t, gateway.SystemOwnerLoginID, sysOwner.GetLoginID())
+			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.GetLoginID())
 		}
 
 		{
@@ -49,7 +49,7 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {
 		{
 			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAdModel, org.GetName())
 			require.NoError(t, err)
-			assert.Equal(t, gateway.SystemOwnerLoginID, sysOwner.GetLoginID())
+			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.GetLoginID())
 		}
 
 		{
