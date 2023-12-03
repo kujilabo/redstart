@@ -134,8 +134,9 @@ func (m *systemAdmin) initFirstOwner(ctx context.Context, systemOwner SystemOwne
 		return nil, liberrors.Errorf("failed to AddFirstOwner. error: %w", err)
 	}
 
-	// owner <-> owner-role
 	pairOfUserAndGroup := m.rf.NewPairOfUserAndGroupRepository(ctx)
+
+	// add owner to owner-group
 	if err := pairOfUserAndGroup.AddPairOfUserAndGroup(ctx, systemOwner, ownerID, ownerGroupID); err != nil {
 		return nil, err
 	}
@@ -143,9 +144,11 @@ func (m *systemAdmin) initFirstOwner(ctx context.Context, systemOwner SystemOwne
 	//
 	rbacRepo := m.rf.NewRBACRepository(ctx)
 	rbacAppUser := NewRBACAppUser(ownerID)
-	rbacAllUserRolesObject := NewRBACAllUserRoleObject()
+	rbacAllUserRolesObject := NewRBACAllUserRolesObject()
+	rbacDomain := NewRBACOrganization(systemOwner.GetOrganizationID())
 
-	if err := rbacRepo.AddNamedPolicy(rbacAppUser, rbacAllUserRolesObject, RBACSetAction, RBACAllowEffect); err != nil {
+	// "owner" "can" "set" "all-user-roles"
+	if err := rbacRepo.AddPolicy(rbacDomain, rbacAppUser, RBACSetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
 		return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
 	}
 
@@ -155,6 +158,10 @@ func (m *systemAdmin) initFirstOwner(ctx context.Context, systemOwner SystemOwne
 	}
 
 	return owner, nil
+}
+
+func NewRBACOrganization(organizationID domain.OrganizationID) domain.RBACDomain {
+	return domain.NewRBACDomain(fmt.Sprintf("domain_%d", organizationID.Int()))
 }
 
 func NewRBACAppUser(appUserID domain.AppUserID) domain.RBACUser {
@@ -172,7 +179,7 @@ func NewRBACUserRoleObject(userRoleID domain.UserGroupID) domain.RBACObject {
 	return domain.NewRBACObject(fmt.Sprintf("role_%d", userRoleID.Int()))
 }
 
-func NewRBACAllUserRoleObject() domain.RBACObject {
+func NewRBACAllUserRolesObject() domain.RBACObject {
 	return domain.NewRBACObject("role_*")
 }
 

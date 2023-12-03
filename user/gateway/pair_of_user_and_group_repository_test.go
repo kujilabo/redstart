@@ -26,12 +26,12 @@ func Test_pairOfUserAndGroupRepository_FindUserGroupsByUserID(t *testing.T) {
 
 		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
 
-		// - user1 has group1, group2, group3
+		// - user1 belongs to group1, group2, group3
 		for _, group := range []service.UserGroup{group1, group2, group3} {
 			err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user1.GetAppUserID(), group.GetUerGroupID())
 			require.NoError(t, err)
 		}
-		// - user2 has group1
+		// - user2 belongs to group1
 		for _, group := range []service.UserGroup{group1} {
 			err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user2.GetAppUserID(), group.GetUerGroupID())
 			require.NoError(t, err)
@@ -44,12 +44,12 @@ func Test_pairOfUserAndGroupRepository_FindUserGroupsByUserID(t *testing.T) {
 		require.NoError(t, err)
 
 		// then
-		// - user1 has group1, group2, group3
+		// - user1 belongs to group1, group2, group3
 		assert.Len(t, groups1, 3)
 		assert.Equal(t, "GROUP_KEY_1", groups1[0].GetKey())
 		assert.Equal(t, "GROUP_KEY_2", groups1[1].GetKey())
 		assert.Equal(t, "GROUP_KEY_3", groups1[2].GetKey())
-		// - user2 has group1
+		// - user2 belongs to group1
 		assert.Len(t, groups2, 1)
 		assert.Equal(t, "GROUP_KEY_1", groups2[0].GetKey())
 	}
@@ -77,7 +77,7 @@ func Test_pairOfUserAndGroupRepository_AddPairOfUserAndGroup(t *testing.T) {
 		err = pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user1.GetAppUserID(), ownerGroup.GetUerGroupID())
 		require.NoError(t, err)
 		// then
-		// - owner can set owner-role to user1
+		// - owner can make user1 belong to owner-group
 		{
 			userGroups1, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, user1, user1.GetAppUserID())
 			require.NoError(t, err)
@@ -87,19 +87,18 @@ func Test_pairOfUserAndGroupRepository_AddPairOfUserAndGroup(t *testing.T) {
 		// when
 		err = pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, user2, user3.GetAppUserID(), ownerGroup.GetUerGroupID())
 		// then
-		// - user2 can NOT set owner-role to user3
+		// - user2 can NOT make user3 belong to owner-group
 		assert.ErrorIs(t, err, libdomain.ErrPermissionDenied)
 
 		// when
 		err = pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, user1, user3.GetAppUserID(), group1.GetUerGroupID())
-		// - user1 can set group1 to user3 because user1 has owner-role
+		// - user1 can make sure user3 belong to group1 because user1 belongs to owner-group
 		assert.NoError(t, err)
 		{
 			userGroups3, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, user1, user3.GetAppUserID())
 			require.NoError(t, err)
 			assert.Len(t, userGroups3, 1)
 		}
-
 	}
 	testDB(t, fn)
 }

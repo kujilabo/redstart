@@ -84,14 +84,16 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 
 	rbacSysOwnerRole := service.NewRBACUserRole(gateway.SystemOwnerGroupKey)
 	rbacOwnerRole := service.NewRBACUserRole(gateway.OwnerGroupKey)
-	rbacAllUserRolesObject := service.NewRBACAllUserRoleObject()
+	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject()
 
 	// add organization
 	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)
 	require.NoError(t, err)
 	assert.Greater(t, orgID.Int(), 0)
 
-	// add system-owner-role
+	rbacDomain := service.NewRBACOrganization(orgID)
+
+	// add system-owner-group
 	sysOwnerRoleID, err := userGorupRepo.AddSystemOwnerGroup(ctx, sysAd, orgID)
 	require.NoError(t, err)
 
@@ -107,8 +109,8 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(bg, sysAd, orgName, service.IncludeGroups)
 	require.NoError(t, err)
 
-	// system-owner-role can set all roles
-	err = rbacRepo.AddNamedPolicy(rbacSysOwnerRole, rbacAllUserRolesObject, service.RBACSetAction, service.RBACAllowEffect)
+	// those who belong to system-owner-group can set all roles
+	err = rbacRepo.AddPolicy(rbacDomain, rbacSysOwnerRole, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
 	require.NoError(t, err)
 
 	// systen-owner <-> system-owner-role
@@ -121,7 +123,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	require.Greater(t, ownerID.Int(), 0)
 
 	// owner-role can set all roles
-	err = rbacRepo.AddNamedPolicy(rbacOwnerRole, rbacAllUserRolesObject, service.RBACSetAction, service.RBACAllowEffect)
+	err = rbacRepo.AddPolicy(rbacDomain, rbacOwnerRole, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
 	require.NoError(t, err)
 
 	// owner <-> owner-role

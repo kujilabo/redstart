@@ -54,7 +54,7 @@ func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroup(ctx context.Context
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.AddPairOfUserAndGroup")
 	defer span.End()
 
-	rbacAllUserRoleObject := service.NewRBACAllUserRoleObject()
+	rbacAllUserRoleObject := service.NewRBACAllUserRolesObject()
 	rbacUserRoleObject := service.NewRBACUserRoleObject(userGroupID)
 
 	ok, err := r.enforce(ctx, operator, []domain.RBACObject{rbacAllUserRoleObject, rbacUserRoleObject}, service.RBACSetAction)
@@ -94,9 +94,10 @@ func (r *pairOfUserAndGroupRepository) add(ctx context.Context, operatorID domai
 	rbacRepo := r.rf.NewRBACRepository(ctx)
 	rbacAppUser := service.NewRBACAppUser(appUserID)
 	rbacUserRole := service.NewRBACUserRole(userGroupKey)
+	rbacDomain := service.NewRBACOrganization(organizationID)
 
-	// add namedGroupingPolicy
-	if err := rbacRepo.AddNamedGroupingPolicy(rbacAppUser, rbacUserRole); err != nil {
+	// app-user belongs to user-role
+	if err := rbacRepo.AddSubjectGroupingPolicy(rbacDomain, rbacAppUser, rbacUserRole); err != nil {
 		return liberrors.Errorf("rbacRepo.AddNamedGroupingPolicy. err: %w", err)
 	}
 
@@ -104,6 +105,7 @@ func (r *pairOfUserAndGroupRepository) add(ctx context.Context, operatorID domai
 }
 
 func (r *pairOfUserAndGroupRepository) enforce(ctx context.Context, operator domain.AppUserModel, rbacObjects []domain.RBACObject, rbacAction domain.RBACAction) (bool, error) {
+	rbacDomain := service.NewRBACOrganization(operator.GetOrganizationID())
 
 	appUserRepo := r.rf.NewAppUserRepository(ctx)
 	appUser, err := appUserRepo.FindAppUserByID(ctx, operator, operator.GetAppUserID(), service.IncludeGroups)
@@ -124,7 +126,7 @@ func (r *pairOfUserAndGroupRepository) enforce(ctx context.Context, operator dom
 	}
 
 	for _, object := range rbacObjects {
-		ok, err := e.Enforce(rbacOperator.Subject(), object.Object(), rbacAction.Action())
+		ok, err := e.Enforce(rbacOperator.Subject(), rbacDomain.Domain(), object.Object(), rbacAction.Action())
 		if err != nil {
 			return false, err
 		}

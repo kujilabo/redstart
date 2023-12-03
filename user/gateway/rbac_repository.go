@@ -31,20 +31,20 @@ import (
 
 const conf = `
 [request_definition]
-r = sub, obj, act
+r = sub, dom, obj, act
 
 [policy_definition]
-p = sub, obj, act, eft
+p = sub, dom, obj, act, eft
 
 [role_definition]
-g = _, _
+g = _, _, _
 g2 = _, _
 
 [policy_effect]
 e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
 
 [matchers]
-m = g(r.sub, p.sub) && g2(r.obj, p.obj) && r.act == p.act
+m = g(r.sub, p.sub, r.dom) && g2(r.obj, p.obj) && r.act == p.act
 `
 
 type rbacRepository struct {
@@ -98,29 +98,39 @@ func (r *rbacRepository) initEnforcer() (*casbin.Enforcer, error) {
 	return e, nil
 }
 
-func (r *rbacRepository) AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction, effect domain.RBACEffect) error {
+func (r *rbacRepository) AddPolicy(domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
 	e, err := r.initEnforcer()
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
 
-	if _, err := e.AddNamedPolicy("p", subject.Subject(), object.Object(), action.Action(), effect.Effect()); err != nil {
+	if _, err := e.AddNamedPolicy("p", subject.Subject(), domain.Domain(), object.Object(), action.Action(), effect.Effect()); err != nil {
 		return liberrors.Errorf("e.AddNamedPolicy. err: %w", err)
 	}
 
 	return nil
 }
 
-func (r *rbacRepository) AddNamedGroupingPolicy(subject domain.RBACUser, object domain.RBACRole) error {
+func (r *rbacRepository) AddSubjectGroupingPolicy(domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error {
 	e, err := r.initEnforcer()
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
-	if e == nil {
-		return errors.Errorf("Nil")
+
+	if _, err := e.AddNamedGroupingPolicy("g", subject.Subject(), object.Role(), domain.Domain()); err != nil {
+		return liberrors.Errorf("e.AddNamedGroupingPolicy. err: %w", err)
 	}
 
-	if _, err := e.AddNamedGroupingPolicy("g", subject.Subject(), object.Role()); err != nil {
+	return nil
+}
+
+func (r *rbacRepository) AddObjectGroupingPolicy(domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error {
+	e, err := r.initEnforcer()
+	if err != nil {
+		return liberrors.Errorf("r.initEnforcer. err: %w", err)
+	}
+
+	if _, err := e.AddNamedGroupingPolicy("g2", child.Object(), parent.Object(), domain.Domain()); err != nil {
 		return liberrors.Errorf("e.AddNamedGroupingPolicy. err: %w", err)
 	}
 

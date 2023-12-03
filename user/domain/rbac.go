@@ -45,6 +45,22 @@ func (r *rbacRole) Role() string {
 	return r.value
 }
 
+type RBACDomain interface {
+	Domain() string
+}
+
+type rbacDomain struct {
+	value string
+}
+
+func NewRBACDomain(value string) RBACDomain {
+	return &rbacDomain{value: value}
+}
+
+func (r *rbacDomain) Domain() string {
+	return r.value
+}
+
 type RBACObject interface {
 	Object() string
 }

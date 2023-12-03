@@ -9,9 +9,10 @@ import (
 type RBACRepository interface {
 	Init() error
 
-	AddNamedPolicy(subject domain.RBACSubject, object domain.RBACObject, action domain.RBACAction, effect domain.RBACEffect) error
+	AddPolicy(domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error
 
-	AddNamedGroupingPolicy(subject domain.RBACUser, object domain.RBACRole) error
+	AddSubjectGroupingPolicy(domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error
+	AddObjectGroupingPolicy(domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error
 
 	NewEnforcerWithGroupsAndUsers(roles []domain.RBACRole, users []domain.RBACUser) (*casbin.Enforcer, error)
 }
