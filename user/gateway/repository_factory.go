@@ -49,4 +49,8 @@ func (f *repositoryFactory) NewRBACRepository(ctx context.Context) service.RBACR
 	return NewRBACRepository(ctx, f.db)
 }
 
+func (f *repositoryFactory) NewAuthorizationManager(ctx context.Context) service.AuthorizationManager {
+	return NewAuthorizationManager(ctx, f.db, f)
+}
+
 type RepositoryFactoryFunc func(ctx context.Context, db *gorm.DB) (service.RepositoryFactory, error)

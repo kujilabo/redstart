@@ -169,7 +169,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 	userGroups := []domain.UserGroupModel{}
 	for _, option := range options {
 		if option == service.IncludeGroups {
-			pairOfUserAndGroupRepo := r.rf.NewPairOfUserAndGroupRepository(ctx)
+			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
 			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
 			if err != nil {
 				return nil, err
@@ -208,7 +208,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain
 	for _, option := range options {
 		fmt.Printf("option: %s\n", option)
 		if option == service.IncludeGroups {
-			pairOfUserAndGroupRepo := r.rf.NewPairOfUserAndGroupRepository(ctx)
+			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
 			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
 			if err != nil {
 				return nil, err

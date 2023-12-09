@@ -24,27 +24,30 @@ type SystemOwner interface {
 
 type systemOwner struct {
 	domain.SystemOwnerModel
-	orgRepo            OrganizationRepository
-	appUserRepo        AppUserRepository
-	userGroupRepo      UserGroupRepository
-	pairOfUserAndGroup PairOfUserAndGroupRepository
-	rbacRepo           RBACRepository
+	orgRepo       OrganizationRepository
+	appUserRepo   AppUserRepository
+	userGroupRepo UserGroupRepository
+	// pairOfUserAndGroup PairOfUserAndGroupRepository
+	// rbacRepo             RBACRepository
+	authorizationManager AuthorizationManager
 }
 
 func NewSystemOwner(ctx context.Context, rf RepositoryFactory, systemOwnerModel domain.SystemOwnerModel) (SystemOwner, error) {
 	orgRepo := rf.NewOrganizationRepository(ctx)
 	appUserRepo := rf.NewAppUserRepository(ctx)
 	userGroupRepo := rf.NewUserGroupRepository(ctx)
-	pairOfUserAndGroup := rf.NewPairOfUserAndGroupRepository(ctx)
-	rbacRepo := rf.NewRBACRepository(ctx)
+	// pairOfUserAndGroup := rf.NewPairOfUserAndGroupRepository(ctx)
+	// rbacRepo := rf.NewRBACRepository(ctx)
+	authorizationManager := rf.NewAuthorizationManager(ctx)
 
 	m := &systemOwner{
-		SystemOwnerModel:   systemOwnerModel,
-		orgRepo:            orgRepo,
-		appUserRepo:        appUserRepo,
-		userGroupRepo:      userGroupRepo,
-		pairOfUserAndGroup: pairOfUserAndGroup,
-		rbacRepo:           rbacRepo,
+		SystemOwnerModel: systemOwnerModel,
+		orgRepo:          orgRepo,
+		appUserRepo:      appUserRepo,
+		userGroupRepo:    userGroupRepo,
+		// pairOfUserAndGroup:   pairOfUserAndGroup,
+		// rbacRepo:             rbacRepo,
+		authorizationManager: authorizationManager,
 	}
 
 	if err := libdomain.Validator.Struct(m); err != nil {
@@ -93,8 +96,20 @@ func (m *systemOwner) FindAppUserByLoginID(ctx context.Context, loginID string) 
 // }
 
 func (m *systemOwner) AddFirstOwner(ctx context.Context, param FirstOwnerAddParameter) (domain.AppUserID, error) {
+	// rbacAppUser := NewRBACAppUser(m.GetOrganizationID(), m.GetAppUserID())
+	rbacAllUserRolesObject := NewRBACAllUserRolesObject(m.GetOrganizationID())
+
+	// Can "the operator" "set" "all-user-roles" ?
+	ok, err := m.authorizationManager.Authorize(ctx, m, RBACSetAction, rbacAllUserRolesObject)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, libdomain.ErrPermissionDenied
+	}
+
 	// add owner
-	ownerID, err := m.appUserRepo.AddAppUser(ctx, m, param)
+	firstOwnerID, err := m.appUserRepo.AddAppUser(ctx, m, param)
 	if err != nil {
 		return nil, liberrors.Errorf("failed to AddFirstOwner. error: %w", err)
 	}
@@ -105,18 +120,26 @@ func (m *systemOwner) AddFirstOwner(ctx context.Context, param FirstOwnerAddPara
 	}
 
 	// add owner to owner-group
-	if err := m.pairOfUserAndGroup.AddPairOfUserAndGroup(ctx, m, ownerID, ownerGroup.GetUerGroupID()); err != nil {
+	if err := m.authorizationManager.AddUserToGroup(ctx, m, firstOwnerID, ownerGroup.GetUerGroupID()); err != nil {
 		return nil, err
 	}
 
-	rbacAppUser := NewRBACAppUser(m.GetOrganizationID(), ownerID)
-	rbacAllUserRolesObject := NewRBACAllUserRolesObject(m.GetOrganizationID())
-	rbacDomain := NewRBACOrganization(m.GetOrganizationID())
+	// add owner to owner-group
+	// if err := m.pairOfUserAndGroup.AddPairOfUserAndGroup(ctx, m, ownerID, ownerGroup.GetUerGroupID()); err != nil {
+	// 	return nil, err
+	// }
 
-	// "owner" "can" "set" "all-user-roles"
-	if err := m.rbacRepo.AddPolicy(rbacDomain, rbacAppUser, RBACSetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
-		return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
-	}
+	// rbacDomain := NewRBACOrganization(m.GetOrganizationID())
 
-	return ownerID, nil
+	// // "owner" "can" "set" "all-user-roles"
+	// if err := m.rbacRepo.AddPolicy(rbacDomain, rbacAppUser, RBACSetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
+	// 	return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
+	// }
+
+	// // "owner" "can" "unset" "all-user-roles"
+	// if err := m.rbacRepo.AddPolicy(rbacDomain, rbacAppUser, RBACUnsetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
+	// 	return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
+	// }
+
+	return firstOwnerID, nil
 }

@@ -15,7 +15,7 @@ type RBACRepository interface {
 	AddObjectGroupingPolicy(domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error
 
 	RemovePolicy(domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error
-	RemoveSubjectPolicy(domain domain.RBACDomain, subject domain.RBACSubject) error
+	// RemoveSubjectPolicy(domain domain.RBACDomain, subject domain.RBACSubject) error
 
 	RemoveSubjectGroupingPolicy(domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error
 	RemoveObjectGroupingPolicy(domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error

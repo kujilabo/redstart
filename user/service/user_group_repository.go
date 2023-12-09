@@ -44,6 +44,8 @@ func (p *userGroupAddParameter) GetDescription() string {
 }
 
 type UserGroupRepository interface {
+	FindAllUserGroups(ctx context.Context, operator domain.AppUserModel) ([]domain.UserGroupModel, error)
+
 	FindSystemOwnerGroup(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (UserGroup, error)
 
 	FindUserGroupByKey(ctx context.Context, operator domain.AppUserModel, key string) (UserGroup, error)

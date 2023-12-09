@@ -77,6 +77,29 @@ func NewUserGroupRepository(ctx context.Context, db *gorm.DB) service.UserGroupR
 	}
 }
 
+func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator domain.AppUserModel) ([]domain.UserGroupModel, error) {
+	_, span := tracer.Start(ctx, "userGroupRepository.FindAllUserGroups")
+	defer span.End()
+
+	userGroups := []userGroupEntity{}
+	if result := r.db.Where(&userGroupEntity{
+		OrganizationID: operator.GetOrganizationID().Int(),
+	}).Find(&userGroups); result.Error != nil {
+		return nil, result.Error
+	}
+
+	userGroupModels := make([]domain.UserGroupModel, len(userGroups))
+	for i, e := range userGroups {
+		m, err := e.toUserGroupModel()
+		if err != nil {
+			return nil, err
+		}
+		userGroupModels[i] = m
+	}
+
+	return userGroupModels, nil
+}
+
 func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindSystemOwnerGroup")
 	defer span.End()
@@ -85,7 +108,7 @@ func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator
 	if result := r.db.Where(&userGroupEntity{
 		OrganizationID: organizationID.Int(),
 		Key:            service.SystemOwnerGroupKey,
-	}).Find(&userGroup); result.Error != nil {
+	}).First(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
 	return userGroup.toUserGroup()
@@ -98,7 +121,7 @@ func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator do
 	userGroup := userGroupEntity{}
 	if result := r.db.Where("organization_id = ?", operator.GetOrganizationID().Int()).
 		Where("id = ? and removed = 0", userGroupID.Int()).
-		Find(&userGroup); result.Error != nil {
+		First(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
 	return userGroup.toUserGroup()
@@ -111,7 +134,7 @@ func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator d
 	userGroup := userGroupEntity{}
 	if result := r.db.Where("`organization_id` = ?", operator.GetOrganizationID().Int()).
 		Where("`key` = ? and `removed` = 0", key).
-		Find(&userGroup); result.Error != nil {
+		First(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
 	return userGroup.toUserGroup()

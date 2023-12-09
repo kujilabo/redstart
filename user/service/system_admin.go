@@ -85,7 +85,8 @@ func (m *systemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 	}
 
 	// add system-owner
-	if _, err := m.appUserRepo.AddSystemOwner(ctx, m, organizationID); err != nil {
+	systemOwnerID, err := m.appUserRepo.AddSystemOwner(ctx, m, organizationID)
+	if err != nil {
 		return nil, liberrors.Errorf("failed to AddSystemOwner. error: %w", err)
 	}
 
@@ -94,12 +95,43 @@ func (m *systemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 		return nil, liberrors.Errorf("failed to FindSystemOwnerByOrganizationName. error: %w", err)
 	}
 
-	pairOfUserAndGroup := m.rf.NewPairOfUserAndGroupRepository(ctx)
+	authorizationManager := m.rf.NewAuthorizationManager(ctx)
 
-	// systen-owner belongs to system-owner-group
-	if err := pairOfUserAndGroup.AddPairOfUserAndGroupToSystemOwner(ctx, m, systemOwner, systemOwnerGroupID); err != nil {
+	// rbacRepo := m.rf.NewRBACRepository(ctx)
+
+	rbacAppUser := NewRBACAppUser(organizationID, systemOwnerID)
+	rbacAllUserRolesObject := NewRBACAllUserRolesObject(organizationID)
+	// rbacDomain := NewRBACOrganization(organizationID)
+
+	// "system-owner" "can" "set" "all-user-roles"
+	if err := authorizationManager.AddPolicyToUserBySystemAdmin(ctx, m, organizationID, rbacAppUser, RBACSetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
 		return nil, err
 	}
+
+	// "system-owner" "can" "unset" "all-user-roles"
+	if err := authorizationManager.AddPolicyToUserBySystemAdmin(ctx, m, organizationID, rbacAppUser, RBACUnsetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
+		return nil, err
+	}
+
+	// // "system-owner" "can" "set" "all-user-roles"
+	// if err := rbacRepo.AddPolicy(rbacDomain, rbacAppUser, RBACSetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
+	// 	return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
+	// }
+
+	// // "system-owner" "can" "unset" "all-user-roles"
+	// if err := rbacRepo.AddPolicy(rbacDomain, rbacAppUser, RBACUnsetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
+	// 	return nil, liberrors.Errorf("Failed to AddNamedPolicy. priv: read, err: %w", err)
+	// }
+
+	// pairOfUserAndGroup := m.rf.NewPairOfUserAndGroupRepository(ctx)
+
+	if err := authorizationManager.AddUserToGroupBySystemAdmin(ctx, m, organizationID, systemOwnerID, systemOwnerGroupID); err != nil {
+		return nil, err
+	}
+	// // systen-owner belongs to system-owner-group
+	// if err := pairOfUserAndGroup.AddPairOfUserAndGroupToSystemOwner(ctx, m, systemOwner, systemOwnerGroupID); err != nil {
+	// 	return nil, err
+	// }
 
 	// add owner group
 	if _, err := userGroupRepo.AddOwnerGroup(ctx, m, organizationID); err != nil {

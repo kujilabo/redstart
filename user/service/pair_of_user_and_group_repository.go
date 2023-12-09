@@ -7,7 +7,7 @@ import (
 )
 
 type PairOfUserAndGroupRepository interface {
-	AddPairOfUserAndGroupToSystemOwner(ctx context.Context, operator domain.SystemAdminModel, systemOwner domain.SystemOwnerModel, userGroupID domain.UserGroupID) error
+	AddPairOfUserAndGroupBySystemAdmin(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error
 
 	AddPairOfUserAndGroup(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error
 

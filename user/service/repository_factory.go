@@ -7,7 +7,9 @@ type RepositoryFactory interface {
 	NewAppUserRepository(ctx context.Context) AppUserRepository
 	NewUserGroupRepository(ctx context.Context) UserGroupRepository
 
-	NewPairOfUserAndGroupRepository(ctx context.Context) PairOfUserAndGroupRepository
+	// NewPairOfUserAndGroupRepository(ctx context.Context) PairOfUserAndGroupRepository
 
-	NewRBACRepository(ctx context.Context) RBACRepository
+	// NewRBACRepository(ctx context.Context) RBACRepository
+
+	NewAuthorizationManager(ctx context.Context) AuthorizationManager
 }
