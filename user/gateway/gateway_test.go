@@ -81,6 +81,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	userGorupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
 	pairOfUserAndRole := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
 	rbacRepo := gateway.NewRBACRepository(ctx, ts.db)
+	authorizationManager := gateway.NewAuthorizationManager(ctx, ts.db, ts.rf)
 
 	// add organization
 	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)
@@ -138,7 +139,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 
 	// owner belongs to owner-group
 	// err = pairOfUserAndRole.AddPairOfUserAndGroup(ctx, sysOwner, ownerID, ownerGroupID)
-
+	err = authorizationManager.AddUserToGroup(ctx, sysOwner, ownerID, ownerGroupID)
 	require.NoError(t, err)
 
 	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.GetLoginID())
