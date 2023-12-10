@@ -25,6 +25,10 @@ type AuthorizationManager interface {
 
 	AddPolicyToUserBySystemAdmin(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error
 
+	AddPolicyToGroup(ctx context.Context, operator domain.AppUserModel, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error
+
+	AddPolicyToGroupBySystemAdmin(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error
+
 	// AddPolicyToGroup()
 
 	// RemovePolicyToGroup()

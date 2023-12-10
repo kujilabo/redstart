@@ -76,69 +76,51 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	require.NoError(t, err)
 
 	orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
-
 	appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
 	userGorupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
-	pairOfUserAndRole := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
-	rbacRepo := gateway.NewRBACRepository(ctx, ts.db)
 	authorizationManager := gateway.NewAuthorizationManager(ctx, ts.db, ts.rf)
 
-	// add organization
+	// 1. add organization
 	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)
 	require.NoError(t, err)
 	assert.Greater(t, orgID.Int(), 0)
 
-	rbacDomain := service.NewRBACOrganization(orgID)
-
-	// add system-owner-group
-	sysOwnerGroupID, err := userGorupRepo.AddSystemOwnerGroup(ctx, sysAd, orgID)
-	require.NoError(t, err)
-
-	// add owner-group
-	ownerGroupID, err := userGorupRepo.AddOwnerGroup(ctx, sysAd, orgID)
-	require.NoError(t, err)
-
-	// add system-owner
+	// 2. add "system-owner" user
 	sysOwnerID, err := appUserRepo.AddSystemOwner(bg, sysAd, orgID)
 	require.NoError(t, err)
 	require.Greater(t, sysOwnerID.Int(), 0)
 
+	// 3. add policy to "system-owner" userct(orgID)
+	rbacSysOwner := service.NewRBACAppUser(orgID, sysOwnerID)
+	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject(orgID)
+	// - "system-owner" "can" "set" "all-user-roles"
+	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
+
+	// - "system-owner" "can" "unset" "all-user-roles"
+	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
+
+	// 4. add owner-group
+	ownerGroupID, err := userGorupRepo.AddOwnerGroup(ctx, sysAd, orgID)
+	require.NoError(t, err)
+
+	// 5. add policty to "owner" group
+	rbacOwnerGroup := service.NewRBACUserRole(orgID, ownerGroupID)
+	// - "owner" group "can" "set" "all-user-roles"
+	err = authorizationManager.AddPolicyToGroupBySystemAdmin(ctx, sysAd, orgID, rbacOwnerGroup, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
+	require.NoError(t, err)
+	// - "owner" group "can" "unset" "all-user-roles"
+	err = authorizationManager.AddPolicyToGroupBySystemAdmin(ctx, sysAd, orgID, rbacOwnerGroup, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
+	require.NoError(t, err)
+
 	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(bg, sysAd, orgName, service.IncludeGroups)
 	require.NoError(t, err)
 
-	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject(orgID)
-
-	rbacSysOwnerRole := service.NewRBACUserRole(orgID, sysOwnerGroupID)
-
-	// those who belong to system-owner-group can set "all user roles"
-	err = rbacRepo.AddPolicy(rbacDomain, rbacSysOwnerRole, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
-	require.NoError(t, err)
-
-	// those who belong to system-owner-group can unset "all user roles"
-	err = rbacRepo.AddPolicy(rbacDomain, rbacSysOwnerRole, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
-	require.NoError(t, err)
-
-	// systen-owner belongs to system-owner-group
-	err = pairOfUserAndRole.AddPairOfUserAndGroupBySystemAdmin(ctx, sysAd, orgID, sysOwnerID, sysOwnerGroupID)
-	require.NoError(t, err)
-
-	// add owner
+	// 6. add first owner
 	ownerID, err := appUserRepo.AddAppUser(ctx, sysOwner, firstOwnerAddParam)
 	require.NoError(t, err)
 	require.Greater(t, ownerID.Int(), 0)
 
-	rbacOwnerRole := service.NewRBACUserRole(orgID, ownerGroupID)
-
-	// those who belong to owner-group can set all roles
-	err = rbacRepo.AddPolicy(rbacDomain, rbacOwnerRole, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
-	require.NoError(t, err)
-
-	// those who belong to owner-group can set all roles
-	err = rbacRepo.AddPolicy(rbacDomain, rbacOwnerRole, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
-	require.NoError(t, err)
-
-	// owner belongs to owner-group
-	// err = pairOfUserAndRole.AddPairOfUserAndGroup(ctx, sysOwner, ownerID, ownerGroupID)
+	// - owner belongs to owner-group
 	err = authorizationManager.AddUserToGroup(ctx, sysOwner, ownerID, ownerGroupID)
 	require.NoError(t, err)
 

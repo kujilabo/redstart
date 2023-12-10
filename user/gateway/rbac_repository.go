@@ -36,7 +36,7 @@ type rbacRepository struct {
 	db *gorm.DB
 }
 
-func NewRBACRepository(ctx context.Context, db *gorm.DB) service.RBACRepository {
+func newRBACRepository(ctx context.Context, db *gorm.DB) service.RBACRepository {
 	if db == nil {
 		panic(errors.New("db is nil"))
 	}

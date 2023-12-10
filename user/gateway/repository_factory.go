@@ -41,13 +41,13 @@ func (f *repositoryFactory) NewUserGroupRepository(ctx context.Context) service.
 	return NewUserGroupRepository(ctx, f.db)
 }
 
-func (f *repositoryFactory) NewPairOfUserAndGroupRepository(ctx context.Context) service.PairOfUserAndGroupRepository {
-	return NewPairOfUserAndGroupRepository(ctx, f.db, f)
-}
+// func (f *repositoryFactory) NewPairOfUserAndGroupRepository(ctx context.Context) service.PairOfUserAndGroupRepository {
+// 	return NewPairOfUserAndGroupRepository(ctx, f.db, f)
+// }
 
-func (f *repositoryFactory) NewRBACRepository(ctx context.Context) service.RBACRepository {
-	return NewRBACRepository(ctx, f.db)
-}
+// func (f *repositoryFactory) NewRBACRepository(ctx context.Context) service.RBACRepository {
+// 	return NewRBACRepository(ctx, f.db)
+// }
 
 func (f *repositoryFactory) NewAuthorizationManager(ctx context.Context) service.AuthorizationManager {
 	return NewAuthorizationManager(ctx, f.db, f)
