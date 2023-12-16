@@ -9,6 +9,14 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Setup MySQL
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3307
+          mysql version: "5.7"
+          mysql database: "testdb"
+          mysql user: "user"
+          mysql password: "password"
       - name: Install Go
         uses: actions/setup-go@v3
         with:
