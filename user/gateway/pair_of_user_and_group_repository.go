@@ -39,13 +39,13 @@ func NewPairOfUserAndGroupRepository(ctx context.Context, db *gorm.DB, rf servic
 	}
 }
 
-func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroupBySystemAdmin(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
+func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.AddPairOfUserAndGroupToSystemOwner")
 	defer span.End()
 
 	pairOfUserAndGroup := pairOfUserAndGroupEntity{
 		JunctionModelEntity: JunctionModelEntity{
-			CreatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
 		AppUserID:      appUserID.Int(),
@@ -64,15 +64,15 @@ func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroupBySystemAdmin(ctx co
 	return nil
 }
 
-func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroup(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
+func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroup(ctx context.Context, operator service.AppUserModelInterface, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.AddPairOfUserAndGroup")
 	defer span.End()
 
 	pairOfUserAndGroup := pairOfUserAndGroupEntity{
 		JunctionModelEntity: JunctionModelEntity{
-			CreatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
 		},
-		OrganizationID: operator.GetOrganizationID().Int(),
+		OrganizationID: operator.OrganizationID().Int(),
 		AppUserID:      appUserID.Int(),
 		UserGroupID:    userGroupID.Int(),
 	}
@@ -133,11 +133,11 @@ func (r *pairOfUserAndGroupRepository) AddPairOfUserAndGroup(ctx context.Context
 // 	return nil
 // }
 
-func (r *pairOfUserAndGroupRepository) RemovePairOfUserAndGroup(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
+func (r *pairOfUserAndGroupRepository) RemovePairOfUserAndGroup(ctx context.Context, operator service.AppUserModelInterface, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.RemovePairOfUserAndGroup")
 	defer span.End()
 
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
 	db := wrappedDB.
 		WherePairOfUserAndGroup().
 		Where("`app_user_id` = ?", appUserID.Int()).
@@ -238,12 +238,12 @@ func (r *pairOfUserAndGroupRepository) RemovePairOfUserAndGroup(ctx context.Cont
 // 	return false, nil
 // }
 
-func (r *pairOfUserAndGroupRepository) FindUserGroupsByUserID(ctx context.Context, operator domain.AppUserModel, appUserID domain.AppUserID) ([]domain.UserGroupModel, error) {
+func (r *pairOfUserAndGroupRepository) FindUserGroupsByUserID(ctx context.Context, operator service.AppUserModelInterface, appUserID domain.AppUserID) ([]*domain.UserGroupModel, error) {
 	userGroups := []userGroupEntity{}
 	if result := r.db.Table("user_group").Select("user_group.*").
-		Where("user_group.organization_id = ?", operator.GetOrganizationID().Int()).
+		Where("user_group.organization_id = ?", operator.OrganizationID().Int()).
 		Where("user_group.removed = 0").
-		Where("app_user.organization_id = ?", operator.GetOrganizationID().Int()).
+		Where("app_user.organization_id = ?", operator.OrganizationID().Int()).
 		Where("app_user.id = ? and app_user.removed = 0", appUserID.Int()).
 		Joins("inner join user_n_group on user_group.id = user_n_group.user_group_id").
 		Joins("inner join app_user on user_n_group.app_user_id = app_user.id").
@@ -252,7 +252,7 @@ func (r *pairOfUserAndGroupRepository) FindUserGroupsByUserID(ctx context.Contex
 		return nil, result.Error
 	}
 
-	userGroupModels := make([]domain.UserGroupModel, len(userGroups))
+	userGroupModels := make([]*domain.UserGroupModel, len(userGroups))
 	for i, e := range userGroups {
 		m, err := e.toUserGroupModel()
 		if err != nil {

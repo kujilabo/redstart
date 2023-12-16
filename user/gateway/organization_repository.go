@@ -57,14 +57,14 @@ func NewOrganizationRepository(ctx context.Context, db *gorm.DB) service.Organiz
 	}
 }
 
-func (r *organizationRepository) GetOrganization(ctx context.Context, operator domain.AppUserModel) (service.Organization, error) {
+func (r *organizationRepository) GetOrganization(ctx context.Context, operator service.AppUserModelInterface) (service.Organization, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.GetOrganization")
 	defer span.End()
 
 	organization := organizationEntity{}
 
 	if result := r.db.Where(organizationEntity{
-		ID: operator.GetOrganizationID().Int(),
+		ID: operator.OrganizationID().Int(),
 	}).First(&organization); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrOrganizationNotFound
@@ -75,7 +75,7 @@ func (r *organizationRepository) GetOrganization(ctx context.Context, operator d
 	return organization.toModel()
 }
 
-func (r *organizationRepository) FindOrganizationByName(ctx context.Context, operator domain.SystemAdminModel, name string) (service.Organization, error) {
+func (r *organizationRepository) FindOrganizationByName(ctx context.Context, operator service.SystemAdminModelInterface, name string) (service.Organization, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.FindOrganizationByName")
 	defer span.End()
 
@@ -93,7 +93,7 @@ func (r *organizationRepository) FindOrganizationByName(ctx context.Context, ope
 	return organization.toModel()
 }
 
-func (r *organizationRepository) FindOrganizationByID(ctx context.Context, operator domain.SystemAdminModel, id domain.OrganizationID) (service.Organization, error) {
+func (r *organizationRepository) FindOrganizationByID(ctx context.Context, operator service.SystemAdminModelInterface, id domain.OrganizationID) (service.Organization, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.FindOrganizationByID")
 	defer span.End()
 
@@ -111,15 +111,15 @@ func (r *organizationRepository) FindOrganizationByID(ctx context.Context, opera
 	return organization.toModel()
 }
 
-func (r *organizationRepository) AddOrganization(ctx context.Context, operator domain.SystemAdminModel, param service.OrganizationAddParameter) (domain.OrganizationID, error) {
+func (r *organizationRepository) AddOrganization(ctx context.Context, operator service.SystemAdminModelInterface, param service.OrganizationAddParameter) (domain.OrganizationID, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.AddOrganization")
 	defer span.End()
 
 	organization := organizationEntity{
 		BaseModelEntity: BaseModelEntity{
 			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
+			UpdatedBy: operator.AppUserID().Int(),
 		},
 		Name: param.GetName(),
 	}

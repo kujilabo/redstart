@@ -1,20 +1,20 @@
 package domain
 
-type OwnerModel interface {
-	AppUserModel
-	IsOwnerModel() bool
+// type OwnerModel interface {
+// 	AppUserModel
+// 	IsOwnerModel() bool
+// }
+
+type OwnerModel struct {
+	*AppUserModel
 }
 
-type ownerModel struct {
-	AppUserModel
-}
-
-func NewOwnerModel(appUser AppUserModel) (OwnerModel, error) {
-	return &ownerModel{
+func NewOwnerModel(appUser *AppUserModel) (*OwnerModel, error) {
+	return &OwnerModel{
 		AppUserModel: appUser,
 	}, nil
 }
 
-func (m *ownerModel) IsOwnerModel() bool {
-	return true
-}
+// func (m *ownerModel) IsOwnerModel() bool {
+// 	return true
+// }

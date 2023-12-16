@@ -18,17 +18,18 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationID(t *testing.T) {
 		defer teardownOrganization(t, ts, orgID)
 
 		sysAdModel := domain.NewSystemAdminModel()
+		sysAd := testNewSystemAdmin(sysAdModel)
 
 		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
 
 		{
-			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAdModel, orgID)
+			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, orgID)
 			require.NoError(t, err)
-			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.GetLoginID())
+			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
 		}
 
 		{
-			_, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAdModel, invalidOrgID)
+			_, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, invalidOrgID)
 			assert.ErrorIs(t, err, service.ErrSystemOwnerNotFound)
 		}
 	}
@@ -43,17 +44,18 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {
 
 		org := getOrganization(t, ctx, ts, orgID)
 		sysAdModel := domain.NewSystemAdminModel()
+		sysAd := testNewSystemAdmin(sysAdModel)
 
 		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
 
 		{
-			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAdModel, org.GetName())
+			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, org.GetName())
 			require.NoError(t, err)
-			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.GetLoginID())
+			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
 		}
 
 		{
-			_, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAdModel, "NOT_FOUND")
+			_, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, "NOT_FOUND")
 			assert.ErrorIs(t, err, service.ErrSystemOwnerNotFound)
 		}
 	}
@@ -78,8 +80,8 @@ func Test_appUserRepository_FindAppUserByID(t *testing.T) {
 		{
 			appUser, err := appUserRepo.FindAppUserByID(ctx, owner, appUserID)
 			require.NoError(t, err)
-			assert.Equal(t, appUserAddParam.GetLoginID(), appUser.GetLoginID())
-			assert.Equal(t, appUserAddParam.GetUsername(), appUser.GetUsername())
+			assert.Equal(t, appUserAddParam.GetLoginID(), appUser.LoginID())
+			assert.Equal(t, appUserAddParam.GetUsername(), appUser.Username())
 		}
 
 		{
@@ -108,8 +110,8 @@ func Test_appUserRepository_FindAppUserByLoginID(t *testing.T) {
 		{
 			appUser, err := appUserRepo.FindAppUserByLoginID(ctx, owner, appUserAddParam.GetLoginID())
 			require.NoError(t, err)
-			assert.Equal(t, appUserAddParam.GetLoginID(), appUser.GetLoginID())
-			assert.Equal(t, appUserAddParam.GetUsername(), appUser.GetUsername())
+			assert.Equal(t, appUserAddParam.GetLoginID(), appUser.LoginID())
+			assert.Equal(t, appUserAddParam.GetUsername(), appUser.Username())
 		}
 
 		{
@@ -136,10 +138,10 @@ func Test_appUserRepository_FindOwnerByLoginID(t *testing.T) {
 		require.Greater(t, appUserID.Int(), 0)
 
 		{
-			appUser, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, owner.GetLoginID())
+			appUser, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, owner.LoginID())
 			require.NoError(t, err)
-			assert.Equal(t, owner.GetLoginID(), appUser.GetLoginID())
-			assert.Equal(t, owner.GetUsername(), appUser.GetUsername())
+			assert.Equal(t, owner.LoginID(), appUser.LoginID())
+			assert.Equal(t, owner.Username(), appUser.Username())
 		}
 
 		{

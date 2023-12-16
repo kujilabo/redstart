@@ -1,21 +1,21 @@
 package domain
 
-type SystemAdminModel interface {
-	GetAppUserID() AppUserID
-	IsSystemAdminModel() bool
+// type SystemAdminModel interface {
+// 	GetAppUserID() AppUserID
+// 	IsSystemAdminModel() bool
+// }
+
+type SystemAdminModel struct {
 }
 
-type systemAdminModel struct {
+func NewSystemAdminModel() *SystemAdminModel {
+	return &SystemAdminModel{}
 }
 
-func NewSystemAdminModel() SystemAdminModel {
-	return &systemAdminModel{}
-}
-
-func (s *systemAdminModel) GetAppUserID() AppUserID {
+func (s *SystemAdminModel) AppUserID() AppUserID {
 	return SystemAdminID
 }
 
-func (s *systemAdminModel) IsSystemAdminModel() bool {
-	return true
-}
+// func (s *systemAdminModel) IsSystemAdminModel() bool {
+// 	return true
+// }

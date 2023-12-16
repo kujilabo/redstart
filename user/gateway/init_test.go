@@ -1,11 +1,14 @@
 package gateway_test
 
 import (
+	"context"
+
 	"gorm.io/gorm"
 
 	"github.com/kujilabo/redstart/sqls"
 	testlibgateway "github.com/kujilabo/redstart/testlib/gateway"
 	"github.com/kujilabo/redstart/user/domain"
+	"github.com/kujilabo/redstart/user/gateway"
 )
 
 var (
@@ -45,5 +48,17 @@ func init() {
 			panic(err)
 		}
 		sqlDB.Close()
+	}
+
+	ctx := context.Background()
+	for driverName, db := range testlibgateway.ListDB() {
+		rf, err := gateway.NewRepositoryFactory(ctx, driverName, db, loc)
+		if err != nil {
+			panic(err)
+		}
+		authorizationManager := rf.NewAuthorizationManager(ctx)
+		if err := authorizationManager.Init(ctx); err != nil {
+			panic(err)
+		}
 	}
 }
