@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"gorm.io/gorm"
 
@@ -216,9 +215,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 
 	userGroups := []domain.UserGroupModel{}
 
-	fmt.Printf("len option: %d\n", len(options))
 	for _, option := range options {
-		fmt.Printf("option: %s\n", option)
 		if option == service.IncludeGroups {
 			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
 			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUser, appUser.AppUserID())
@@ -229,8 +226,6 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 			userGroups = userGroupsTmp
 		}
 	}
-
-	fmt.Println(userGroups)
 
 	return appUserE.toAppUser(ctx, r.rf, userGroups)
 }

@@ -99,9 +99,11 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject(orgID)
 	// - "system-owner" "can" "set" "all-user-roles"
 	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
+	require.NoError(t, err)
 
 	// - "system-owner" "can" "unset" "all-user-roles"
 	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
+	require.NoError(t, err)
 
 	// 4. add owner-group
 	ownerGroupID, err := userGorupRepo.AddOwnerGroup(ctx, sysOwner, orgID)
@@ -202,7 +204,6 @@ func testNewAppUser(appUserModel *domain.AppUserModel) *testAppUserModel {
 	return &testAppUserModel{
 		appUserModel,
 	}
-
 }
 
 func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) service.AppUserAddParameter {
