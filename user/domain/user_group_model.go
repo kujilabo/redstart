@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"strings"
-
 	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
@@ -29,17 +27,17 @@ func (v *userGroupID) IsUserGroupID() bool {
 	return true
 }
 
-type UserGroupModel interface {
-	libdomain.BaseModel
-	GetUerGroupID() UserGroupID
-	GetOrganizationID() OrganizationID
-	GetKey() string
-	GetName() string
-	GetDescription() string
-	IsSystemGroup() bool
-}
+// type UserGroupModel interface {
+// 	libdomain.BaseModel
+// 	GetUserGroupID() UserGroupID
+// 	GetOrganizationID() OrganizationID
+// 	GetKey() string
+// 	GetName() string
+// 	GetDescription() string
+// 	IsSystemGroup() bool
+// }
 
-type userGroupModel struct {
+type UserGroupModel struct {
 	libdomain.BaseModel
 	UserGroupID    UserGroupID
 	OrganizationID OrganizationID
@@ -49,8 +47,8 @@ type userGroupModel struct {
 }
 
 // NewUserGroupModel returns a new UserGroupModel
-func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID UserGroupID, organizationID OrganizationID, key, name, description string) (UserGroupModel, error) {
-	m := &userGroupModel{
+func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID UserGroupID, organizationID OrganizationID, key, name, description string) (*UserGroupModel, error) {
+	m := &UserGroupModel{
 		BaseModel:      baseModel,
 		UserGroupID:    userGroupID,
 		OrganizationID: organizationID,
@@ -66,26 +64,26 @@ func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID UserGroupID, o
 	return m, nil
 }
 
-func (m *userGroupModel) GetUerGroupID() UserGroupID {
-	return m.UserGroupID
-}
+// func (m *userGroupModel) GetUserGroupID() UserGroupID {
+// 	return m.UserGroupID
+// }
 
-func (m *userGroupModel) GetOrganizationID() OrganizationID {
-	return m.OrganizationID
-}
+// func (m *userGroupModel) GetOrganizationID() OrganizationID {
+// 	return m.OrganizationID
+// }
 
-func (m *userGroupModel) GetKey() string {
-	return m.Key
-}
+// func (m *userGroupModel) GetKey() string {
+// 	return m.Key
+// }
 
-func (m *userGroupModel) GetName() string {
-	return m.Name
-}
+// func (m *userGroupModel) GetName() string {
+// 	return m.Name
+// }
 
-func (m *userGroupModel) GetDescription() string {
-	return m.Description
-}
+// func (m *userGroupModel) GetDescription() string {
+// 	return m.Description
+// }
 
-func (m *userGroupModel) IsSystemGroup() bool {
-	return strings.HasPrefix(m.Key, "__")
-}
+// func (m *userGroupModel) IsSystemGroup() bool {
+// 	return strings.HasPrefix(m.Key, "__")
+// }

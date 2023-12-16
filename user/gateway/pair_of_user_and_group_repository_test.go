@@ -26,31 +26,33 @@ func Test_pairOfUserAndGroupRepository_FindUserGroupsByUserID(t *testing.T) {
 		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
 
 		// - user1 belongs to group1, group2, group3
-		for _, group := range []service.UserGroup{group1, group2, group3} {
-			err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user1.AppUserID(), group.GetUerGroupID())
+		for _, group := range []*service.UserGroup{group1, group2, group3} {
+			err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user1.AppUserID(), group.UserGroupID())
 			require.NoError(t, err)
 		}
 		// - user2 belongs to group1
-		for _, group := range []service.UserGroup{group1} {
-			err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user2.AppUserID(), group.GetUerGroupID())
+		for _, group := range []*service.UserGroup{group1} {
+			err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user2.AppUserID(), group.UserGroupID())
 			require.NoError(t, err)
 		}
 
 		// when
-		groups1, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, owner, user1.AppUserID())
+		groupModels1, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, owner, user1.AppUserID())
 		require.NoError(t, err)
-		groups2, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, owner, user2.AppUserID())
+		groupModels2, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, owner, user2.AppUserID())
 		require.NoError(t, err)
+		groups1 := testNewUserGroups(groupModels1)
+		groups2 := testNewUserGroups(groupModels2)
 
 		// then
 		// - user1 belongs to group1, group2, group3
 		assert.Len(t, groups1, 3)
-		assert.Equal(t, "GROUP_KEY_1", groups1[0].GetKey())
-		assert.Equal(t, "GROUP_KEY_2", groups1[1].GetKey())
-		assert.Equal(t, "GROUP_KEY_3", groups1[2].GetKey())
+		assert.Equal(t, "GROUP_KEY_1", groups1[0].Key())
+		assert.Equal(t, "GROUP_KEY_2", groups1[1].Key())
+		assert.Equal(t, "GROUP_KEY_3", groups1[2].Key())
 		// - user2 belongs to group1
 		assert.Len(t, groups2, 1)
-		assert.Equal(t, "GROUP_KEY_1", groups2[0].GetKey())
+		assert.Equal(t, "GROUP_KEY_1", groups2[0].Key())
 	}
 	testDB(t, fn)
 }
@@ -72,7 +74,7 @@ func Test_pairOfUserAndGroupRepository_RemovePairOfUserAndGroup(t *testing.T) {
 		ownerGroup, err := userGroupRepo.FindUserGroupByKey(ctx, owner, service.OwnerGroupKey)
 		require.NoError(t, err)
 
-		err = pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user1.AppUserID(), ownerGroup.GetUerGroupID())
+		err = pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, owner, user1.AppUserID(), ownerGroup.UserGroupID())
 		require.NoError(t, err)
 		{
 			userGroups1, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, user1, user1.AppUserID())
@@ -81,7 +83,7 @@ func Test_pairOfUserAndGroupRepository_RemovePairOfUserAndGroup(t *testing.T) {
 		}
 
 		// when
-		err = pairOfUserAndGroupRepo.RemovePairOfUserAndGroup(ctx, owner, user1.AppUserID(), ownerGroup.GetUerGroupID())
+		err = pairOfUserAndGroupRepo.RemovePairOfUserAndGroup(ctx, owner, user1.AppUserID(), ownerGroup.UserGroupID())
 		require.NoError(t, err)
 
 		// then

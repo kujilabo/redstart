@@ -117,7 +117,7 @@ func (m *authorizationManager) Authorize(ctx context.Context, operator service.A
 
 	rbacRoles := make([]domain.RBACRole, 0)
 	for _, userGroup := range userGroups {
-		rbacRoles = append(rbacRoles, service.NewRBACUserRole(operator.OrganizationID(), userGroup.GetUerGroupID()))
+		rbacRoles = append(rbacRoles, service.NewRBACUserRole(operator.OrganizationID(), userGroup.UserGroupID))
 	}
 
 	rbacRepo := newRBACRepository(ctx, m.db)

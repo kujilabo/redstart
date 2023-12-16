@@ -140,7 +140,7 @@ func (m *SystemOwner) AddFirstOwner(ctx context.Context, param FirstOwnerAddPara
 	}
 
 	// add owner to owner-group
-	if err := m.authorizationManager.AddUserToGroup(ctx, m, firstOwnerID, ownerGroup.GetUerGroupID()); err != nil {
+	if err := m.authorizationManager.AddUserToGroup(ctx, m, firstOwnerID, ownerGroup.UserGroupID()); err != nil {
 		return nil, err
 	}
 

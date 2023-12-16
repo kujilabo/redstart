@@ -154,15 +154,15 @@ func testAddAppUser(t *testing.T, ctx context.Context, ts testService, owner ser
 	return user1
 }
 
-func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner service.OwnerModelInterface, key, name, description string) service.UserGroup {
+func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner service.OwnerModelInterface, key, name, description string) *service.UserGroup {
 	userGorupRepo := ts.rf.NewUserGroupRepository(ctx)
 	groupID1, err := userGorupRepo.AddUserGroup(ctx, owner, testNewUserGroupAddParameter(t, key, name, description))
 	require.NoError(t, err)
 	group1, err := userGorupRepo.FindUserGroupByID(ctx, owner, groupID1)
 	require.NoError(t, err)
-	require.Equal(t, key, group1.GetKey())
-	require.Equal(t, name, group1.GetName())
-	require.Equal(t, description, group1.GetDescription())
+	require.Equal(t, key, group1.Key())
+	require.Equal(t, name, group1.Name())
+	require.Equal(t, description, group1.Description())
 
 	return group1
 }
@@ -199,11 +199,36 @@ func (m *testAppUserModel) LoginID() string {
 func (m *testAppUserModel) Username() string {
 	return m.AppUserModel.Username
 }
-
 func testNewAppUser(appUserModel *domain.AppUserModel) *testAppUserModel {
 	return &testAppUserModel{
 		appUserModel,
 	}
+}
+
+type testUserGroupModel struct {
+	*domain.UserGroupModel
+}
+
+func (m *testUserGroupModel) Key() string {
+	return m.UserGroupModel.Key
+}
+func (m *testUserGroupModel) Name() string {
+	return m.UserGroupModel.Key
+}
+func (m *testUserGroupModel) Description() string {
+	return m.UserGroupModel.Description
+}
+func testNewUserGroup(userGroupModel *domain.UserGroupModel) *testUserGroupModel {
+	return &testUserGroupModel{
+		userGroupModel,
+	}
+}
+func testNewUserGroups(userGroupModels []*domain.UserGroupModel) []*testUserGroupModel {
+	groups := make([]*testUserGroupModel, len(userGroupModels))
+	for i, groupModel := range userGroupModels {
+		groups[i] = testNewUserGroup(groupModel)
+	}
+	return groups
 }
 
 func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) service.AppUserAddParameter {

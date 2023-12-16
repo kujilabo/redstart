@@ -47,7 +47,7 @@ func (e *appUserEntity) TableName() string {
 //		}
 //		return appUser, nil
 //	}
-func (e *appUserEntity) toAppUserModel(userGroups []domain.UserGroupModel) (*domain.AppUserModel, error) {
+func (e *appUserEntity) toAppUserModel(userGroups []*domain.UserGroupModel) (*domain.AppUserModel, error) {
 	baseModel, err := e.toBaseModel()
 	if err != nil {
 		return nil, liberrors.Errorf("e.toModel. err: %w", err)
@@ -71,7 +71,7 @@ func (e *appUserEntity) toAppUserModel(userGroups []domain.UserGroupModel) (*dom
 	return appUserModel, nil
 }
 
-func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (*domain.OwnerModel, error) {
+func (e *appUserEntity) toOwnerModel(userGroups []*domain.UserGroupModel) (*domain.OwnerModel, error) {
 	appUserModel, err := e.toAppUserModel(userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel. err: %w", err)
@@ -85,7 +85,7 @@ func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (*domai
 	return ownerModel, nil
 }
 
-func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (*service.SystemOwner, error) {
+func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userGroup []*domain.UserGroupModel) (*service.SystemOwner, error) {
 	if e.LoginID != service.SystemOwnerLoginID {
 		return nil, liberrors.Errorf("invalid system owner. loginID: %s", e.LoginID)
 	}
@@ -108,7 +108,7 @@ func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.Repository
 	return systemOwner, nil
 }
 
-func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (*service.Owner, error) {
+func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []*domain.UserGroupModel) (*service.Owner, error) {
 	ownerModel, err := e.toOwnerModel(userGroup)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toOwnerModel(). err: %w", err)
@@ -117,7 +117,7 @@ func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []domain
 	return service.NewOwner(rf, ownerModel), nil
 }
 
-func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userGroups []domain.UserGroupModel) (*service.AppUser, error) {
+func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userGroups []*domain.UserGroupModel) (*service.AppUser, error) {
 	appUserModel, err := e.toAppUserModel(userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel(). err: %w", err)
@@ -177,7 +177,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 		return nil, err
 	}
 
-	userGroups := []domain.UserGroupModel{}
+	userGroups := []*domain.UserGroupModel{}
 	for _, option := range options {
 		if option == service.IncludeGroups {
 			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
@@ -213,7 +213,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 		return nil, err
 	}
 
-	userGroups := []domain.UserGroupModel{}
+	userGroups := []*domain.UserGroupModel{}
 
 	for _, option := range options {
 		if option == service.IncludeGroups {

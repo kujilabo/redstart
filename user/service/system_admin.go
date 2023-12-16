@@ -157,7 +157,7 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 		return nil, err
 	}
 
-	rbacOwnerGroup := NewRBACUserRole(organizationID, ownerGroup.GetUerGroupID())
+	rbacOwnerGroup := NewRBACUserRole(organizationID, ownerGroup.UserGroupID())
 	// - "owner" group "can" "set" "all-user-roles"
 	if err := authorizationManager.AddPolicyToGroupBySystemAdmin(ctx, m, organizationID, rbacOwnerGroup, RBACSetAction, rbacAllUserRolesObject, RBACAllowEffect); err != nil {
 		return nil, err

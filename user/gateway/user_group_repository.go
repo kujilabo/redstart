@@ -29,7 +29,7 @@ func (e *userGroupEntity) TableName() string {
 	return UserGroupTableName
 }
 
-func (e *userGroupEntity) toUserGroupModel() (domain.UserGroupModel, error) {
+func (e *userGroupEntity) toUserGroupModel() (*domain.UserGroupModel, error) {
 	baseModel, err := e.toBaseModel()
 	if err != nil {
 		return nil, liberrors.Errorf("toBaseModel. err: %w", err)
@@ -53,7 +53,7 @@ func (e *userGroupEntity) toUserGroupModel() (domain.UserGroupModel, error) {
 	return userGroupModel, nil
 }
 
-func (e *userGroupEntity) toUserGroup() (service.UserGroup, error) {
+func (e *userGroupEntity) toUserGroup() (*service.UserGroup, error) {
 	userGroupModel, err := e.toUserGroupModel()
 	if err != nil {
 		return nil, liberrors.Errorf("e.touserGroupModel. err: %w", err)
@@ -77,7 +77,7 @@ func NewUserGroupRepository(ctx context.Context, db *gorm.DB) service.UserGroupR
 	}
 }
 
-func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator service.AppUserModelInterface) ([]domain.UserGroupModel, error) {
+func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator service.AppUserModelInterface) ([]*domain.UserGroupModel, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindAllUserGroups")
 	defer span.End()
 
@@ -88,7 +88,7 @@ func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator se
 		return nil, result.Error
 	}
 
-	userGroupModels := make([]domain.UserGroupModel, len(userGroups))
+	userGroupModels := make([]*domain.UserGroupModel, len(userGroups))
 	for i, e := range userGroups {
 		m, err := e.toUserGroupModel()
 		if err != nil {
@@ -100,7 +100,7 @@ func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator se
 	return userGroupModels, nil
 }
 
-func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (service.UserGroup, error) {
+func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (*service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindSystemOwnerGroup")
 	defer span.End()
 
@@ -114,7 +114,7 @@ func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator service.AppUserModelInterface, userGroupID domain.UserGroupID) (service.UserGroup, error) {
+func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator service.AppUserModelInterface, userGroupID domain.UserGroupID) (*service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindUserGroupByID")
 	defer span.End()
 
@@ -127,7 +127,7 @@ func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator se
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator service.AppUserModelInterface, key string) (service.UserGroup, error) {
+func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator service.AppUserModelInterface, key string) (*service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindUserGroupByKey")
 	defer span.End()
 

@@ -43,10 +43,10 @@ type AppUserModel struct {
 	OrganizationID OrganizationID
 	LoginID        string `validate:"required"`
 	Username       string `validate:"required"`
-	UserGroups     []UserGroupModel
+	UserGroups     []*UserGroupModel
 }
 
-func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userGroups []UserGroupModel) (*AppUserModel, error) {
+func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userGroups []*UserGroupModel) (*AppUserModel, error) {
 	m := &AppUserModel{
 		BaseModel:      baseModel,
 		AppUserID:      appUserID,

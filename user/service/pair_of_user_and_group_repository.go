@@ -13,5 +13,5 @@ type PairOfUserAndGroupRepository interface {
 
 	RemovePairOfUserAndGroup(ctx context.Context, operator AppUserModelInterface, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error
 
-	FindUserGroupsByUserID(ctx context.Context, operator AppUserModelInterface, appUserID domain.AppUserID) ([]domain.UserGroupModel, error)
+	FindUserGroupsByUserID(ctx context.Context, operator AppUserModelInterface, appUserID domain.AppUserID) ([]*domain.UserGroupModel, error)
 }

@@ -25,7 +25,7 @@ func Test_AddPairOfUserAndGroup(t *testing.T) {
 		ownerGroup, err := userGroupRepo.FindUserGroupByKey(ctx, owner, service.OwnerGroupKey)
 		require.NoError(t, err)
 
-		rbacRoleObject := service.NewRBACUserRoleObject(orgID, ownerGroup.GetUerGroupID())
+		rbacRoleObject := service.NewRBACUserRoleObject(orgID, ownerGroup.UserGroupID())
 
 		// when
 		ok, err := authorizationManager.Authorize(ctx, owner, service.RBACSetAction, rbacRoleObject)
@@ -43,7 +43,7 @@ func Test_AddPairOfUserAndGroup(t *testing.T) {
 
 		// given
 		// - add user1 to owner-group
-		err = authorizationManager.AddUserToGroup(ctx, owner, user1.AppUserID(), ownerGroup.GetUerGroupID())
+		err = authorizationManager.AddUserToGroup(ctx, owner, user1.AppUserID(), ownerGroup.UserGroupID())
 		require.NoError(t, err)
 		// when
 		ok, err = authorizationManager.Authorize(ctx, user1, service.RBACSetAction, rbacRoleObject)
