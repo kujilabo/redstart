@@ -43,7 +43,7 @@ func Test_AddPairOfUserAndGroup(t *testing.T) {
 
 		// given
 		// - add user1 to owner-group
-		err = authorizationManager.AddUserToGroup(ctx, owner, user1.GetAppUserID(), ownerGroup.GetUerGroupID())
+		err = authorizationManager.AddUserToGroup(ctx, owner, user1.AppUserID(), ownerGroup.GetUerGroupID())
 		require.NoError(t, err)
 		// when
 		ok, err = authorizationManager.Authorize(ctx, user1, service.RBACSetAction, rbacRoleObject)

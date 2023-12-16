@@ -77,13 +77,13 @@ func NewUserGroupRepository(ctx context.Context, db *gorm.DB) service.UserGroupR
 	}
 }
 
-func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator domain.AppUserModel) ([]domain.UserGroupModel, error) {
+func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator service.AppUserModelInterface) ([]domain.UserGroupModel, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindAllUserGroups")
 	defer span.End()
 
 	userGroups := []userGroupEntity{}
 	if result := r.db.Where(&userGroupEntity{
-		OrganizationID: operator.GetOrganizationID().Int(),
+		OrganizationID: operator.OrganizationID().Int(),
 	}).Find(&userGroups); result.Error != nil {
 		return nil, result.Error
 	}
@@ -100,7 +100,7 @@ func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator do
 	return userGroupModels, nil
 }
 
-func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (service.UserGroup, error) {
+func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindSystemOwnerGroup")
 	defer span.End()
 
@@ -114,12 +114,12 @@ func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator domain.AppUserModel, userGroupID domain.UserGroupID) (service.UserGroup, error) {
+func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator service.AppUserModelInterface, userGroupID domain.UserGroupID) (service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindUserGroupByID")
 	defer span.End()
 
 	userGroup := userGroupEntity{}
-	if result := r.db.Where("organization_id = ?", operator.GetOrganizationID().Int()).
+	if result := r.db.Where("organization_id = ?", operator.OrganizationID().Int()).
 		Where("id = ? and removed = 0", userGroupID.Int()).
 		First(&userGroup); result.Error != nil {
 		return nil, result.Error
@@ -127,12 +127,12 @@ func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator do
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator domain.AppUserModel, key string) (service.UserGroup, error) {
+func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator service.AppUserModelInterface, key string) (service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindUserGroupByKey")
 	defer span.End()
 
 	userGroup := userGroupEntity{}
-	if result := r.db.Where("`organization_id` = ?", operator.GetOrganizationID().Int()).
+	if result := r.db.Where("`organization_id` = ?", operator.OrganizationID().Int()).
 		Where("`key` = ? and `removed` = 0", key).
 		First(&userGroup); result.Error != nil {
 		return nil, result.Error
@@ -140,15 +140,15 @@ func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator d
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (domain.UserGroupID, error) {
+func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddSystemOwnerGroup")
 	defer span.End()
 
 	userGroup := userGroupEntity{
 		BaseModelEntity: BaseModelEntity{
 			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
+			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
 		Key:            service.SystemOwnerGroupKey,
@@ -166,15 +166,15 @@ func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator 
 	return userGroupID, nil
 }
 
-func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (domain.UserGroupID, error) {
+func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator service.SystemOwnerModelInterface, organizationID domain.OrganizationID) (domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddOwnerGroup")
 	defer span.End()
 
 	userGroup := userGroupEntity{
 		BaseModelEntity: BaseModelEntity{
 			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
+			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
 		Key:            service.OwnerGroupKey,
@@ -192,17 +192,17 @@ func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator domain
 	return userGroupID, nil
 }
 
-func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator domain.OwnerModel, parameter service.UserGroupAddParameter) (domain.UserGroupID, error) {
+func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service.OwnerModelInterface, parameter service.UserGroupAddParameter) (domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddUserGroup")
 	defer span.End()
 
 	userGroup := userGroupEntity{
 		BaseModelEntity: BaseModelEntity{
 			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
+			UpdatedBy: operator.AppUserID().Int(),
 		},
-		OrganizationID: operator.GetOrganizationID().Int(),
+		OrganizationID: operator.OrganizationID().Int(),
 		Key:            parameter.GetKey(),
 		Name:           parameter.GetName(),
 		Description:    parameter.GetDescription(),

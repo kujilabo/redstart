@@ -28,16 +28,16 @@ func (v *appUserID) IsAppUserID() bool {
 	return true
 }
 
-type AppUserModel interface {
-	libdomain.BaseModel
-	GetAppUserID() AppUserID
-	GetOrganizationID() OrganizationID
-	GetLoginID() string
-	GetUsername() string
-	GetUserGroups() []UserGroupModel
-}
+// type AppUserModel interface {
+// 	libdomain.BaseModel
+// 	GetAppUserID() AppUserID
+// 	GetOrganizationID() OrganizationID
+// 	GetLoginID() string
+// 	GetUsername() string
+// 	GetUserGroups() []UserGroupModel
+// }
 
-type appUserModel struct {
+type AppUserModel struct {
 	libdomain.BaseModel
 	AppUserID      AppUserID
 	OrganizationID OrganizationID
@@ -46,8 +46,8 @@ type appUserModel struct {
 	UserGroups     []UserGroupModel
 }
 
-func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userGroups []UserGroupModel) (AppUserModel, error) {
-	m := &appUserModel{
+func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userGroups []UserGroupModel) (*AppUserModel, error) {
+	m := &AppUserModel{
 		BaseModel:      baseModel,
 		AppUserID:      appUserID,
 		OrganizationID: organizationID,
@@ -63,22 +63,22 @@ func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organiz
 	return m, nil
 }
 
-func (m *appUserModel) GetAppUserID() AppUserID {
-	return m.AppUserID
-}
+// func (m *appUserModel) GetAppUserID() AppUserID {
+// 	return m.AppUserID
+// }
 
-func (m *appUserModel) GetOrganizationID() OrganizationID {
-	return m.OrganizationID
-}
+// func (m *appUserModel) GetOrganizationID() OrganizationID {
+// 	return m.OrganizationID
+// }
 
-func (m *appUserModel) GetLoginID() string {
-	return m.LoginID
-}
+// func (m *appUserModel) GetLoginID() string {
+// 	return m.LoginID
+// }
 
-func (m *appUserModel) GetUsername() string {
-	return m.Username
-}
+// func (m *appUserModel) GetUsername() string {
+// 	return m.Username
+// }
 
-func (m *appUserModel) GetUserGroups() []UserGroupModel {
-	return m.UserGroups
-}
+// func (m *appUserModel) GetUserGroups() []UserGroupModel {
+// 	return m.UserGroups
+// }

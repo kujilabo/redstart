@@ -10,6 +10,29 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
+type AppUserModelInterface interface {
+	AppUserID() domain.AppUserID
+	OrganizationID() domain.OrganizationID
+	LoginID() string
+	Username() string
+	// GetUserGroups() []domain.UserGroupModel
+}
+type OwnerModelInterface interface {
+	AppUserModelInterface
+	IsOwner() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
+type SystemOwnerModelInterface interface {
+	OwnerModelInterface
+	IsSystemOwner() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
+type SystemAdminModelInterface interface {
+	AppUserID() domain.AppUserID
+	IsSystemAdmin() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
+
 var ErrOrganizationNotFound = errors.New("organization not found")
 var ErrOrganizationAlreadyExists = errors.New("organization already exists")
 
@@ -79,13 +102,13 @@ func (p *organizationAddParameter) GetFirstOwner() FirstOwnerAddParameter {
 }
 
 type OrganizationRepository interface {
-	GetOrganization(ctx context.Context, operator domain.AppUserModel) (Organization, error)
+	GetOrganization(ctx context.Context, operator AppUserModelInterface) (Organization, error)
 
-	FindOrganizationByName(ctx context.Context, operator domain.SystemAdminModel, name string) (Organization, error)
+	FindOrganizationByName(ctx context.Context, operator SystemAdminModelInterface, name string) (Organization, error)
 
-	FindOrganizationByID(ctx context.Context, operator domain.SystemAdminModel, id domain.OrganizationID) (Organization, error)
+	FindOrganizationByID(ctx context.Context, operator SystemAdminModelInterface, id domain.OrganizationID) (Organization, error)
 
-	AddOrganization(ctx context.Context, operator domain.SystemAdminModel, param OrganizationAddParameter) (domain.OrganizationID, error)
+	AddOrganization(ctx context.Context, operator SystemAdminModelInterface, param OrganizationAddParameter) (domain.OrganizationID, error)
 
 	// FindOrganizationByName(ctx context.Context, operator SystemAdmin, name string) (Organization, error)
 	// FindOrganization(ctx context.Context, operator AppUser) (Organization, error)

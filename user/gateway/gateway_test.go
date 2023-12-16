@@ -64,7 +64,7 @@ func testDB(t *testing.T, fn func(t *testing.T, ctx context.Context, ts testServ
 	}
 }
 
-func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domain.OrganizationID, service.SystemOwner, service.Owner) {
+func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domain.OrganizationID, *service.SystemOwner, *service.Owner) {
 	bg := context.Background()
 	orgName := RandString(orgNameLength)
 	sysAd, err := service.NewSystemAdmin(ctx, ts.rf)
@@ -90,6 +90,10 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	require.NoError(t, err)
 	require.Greater(t, sysOwnerID.Int(), 0)
 
+	// TODO
+	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, orgName, service.IncludeGroups)
+	require.NoError(t, err)
+
 	// 3. add policy to "system-owner" userct(orgID)
 	rbacSysOwner := service.NewRBACAppUser(orgID, sysOwnerID)
 	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject(orgID)
@@ -100,7 +104,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
 
 	// 4. add owner-group
-	ownerGroupID, err := userGorupRepo.AddOwnerGroup(ctx, sysAd, orgID)
+	ownerGroupID, err := userGorupRepo.AddOwnerGroup(ctx, sysOwner, orgID)
 	require.NoError(t, err)
 
 	// 5. add policty to "owner" group
@@ -110,9 +114,6 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	require.NoError(t, err)
 	// - "owner" group "can" "unset" "all-user-roles"
 	err = authorizationManager.AddPolicyToGroupBySystemAdmin(ctx, sysAd, orgID, rbacOwnerGroup, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
-	require.NoError(t, err)
-
-	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(bg, sysAd, orgName, service.IncludeGroups)
 	require.NoError(t, err)
 
 	// 6. add first owner
@@ -140,65 +141,18 @@ func teardownOrganization(t *testing.T, ts testService, orgID domain.Organizatio
 	// db.Where("true").Delete(&organizationEntity{})
 }
 
-// func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domain.OrganizationID, service.SystemOwner, service.Owner) {
-// 	orgName := RandString(orgNameLength)
-// 	userRf, err := ts.rf.NewUserRepositoryFactory(ctx)
-// 	require.NoError(t, err)
-// 	sysAd, err := service.NewSystemAdmin(ctx, userRf)
-// 	require.NoError(t, err)
-
-// 	firstOwnerAddParam, err := service.NewFirstOwnerAddParameter("OWNER_ID", "OWNER_NAME", "")
-// 	require.NoError(t, err)
-// 	orgAddParam, err := service.NewOrganizationAddParameter(orgName, firstOwnerAddParam)
-// 	require.NoError(t, err)
-// 	orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
-
-// 	// register new organization
-// 	orgID, err := orgRepo.AddOrganization(ctx, sysAd, orgAddParam)
-// 	require.NoError(t, err)
-// 	require.Greater(t, orgID.Int(), 0)
-// 	logrus.Debugf("OrgID: %d \n", orgID.Int())
-// 	org, err := orgRepo.FindOrganizationByID(ctx, sysAd, orgID)
-// 	require.NoError(t, err)
-// 	logrus.Debugf("OrgID: %d \n", org.GetID().Int())
-
-// 	appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
-// 	sysOwnerID, err := appUserRepo.AddSystemOwner(ctx, sysAd, orgID)
-// 	require.NoError(t, err)
-// 	require.Greater(t, sysOwnerID.Int(), 0)
-
-// 	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, orgName)
-// 	require.NoError(t, err)
-// 	require.Greater(t, int(uint(sysOwnerID)), 0)
-
-// 	firstOwnerID, err := appUserRepo.AddFirstOwner(ctx, sysOwner, firstOwnerAddParam)
-// 	require.NoError(t, err)
-// 	require.Greater(t, int(uint(firstOwnerID)), 0)
-
-// 	firstOwner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, "OWNER_ID")
-// 	require.NoError(t, err)
-
-// 	spaceRepo := userG.NewSpaceRepository(ctx, ts.db)
-// 	_, err = spaceRepo.AddDefaultSpace(ctx, sysOwner)
-// 	require.NoError(t, err)
-// 	_, err = spaceRepo.AddPersonalSpace(ctx, sysOwner, firstOwner)
-// 	require.NoError(t, err)
-
-// 	return orgID, sysOwner, firstOwner
-// }
-
-func testAddAppUser(t *testing.T, ctx context.Context, ts testService, owner domain.OwnerModel, loginID, username, password string) service.AppUser {
+func testAddAppUser(t *testing.T, ctx context.Context, ts testService, owner service.OwnerModelInterface, loginID, username, password string) *service.AppUser {
 	appUserRepo := ts.rf.NewAppUserRepository(ctx)
 	userID1, err := appUserRepo.AddAppUser(ctx, owner, testNewAppUserAddParameter(t, loginID, username, password))
 	require.NoError(t, err)
 	user1, err := appUserRepo.FindAppUserByID(ctx, owner, userID1)
 	require.NoError(t, err)
-	require.Equal(t, loginID, user1.GetLoginID())
+	require.Equal(t, loginID, user1.LoginID())
 
 	return user1
 }
 
-func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner domain.OwnerModel, key, name, description string) service.UserGroup {
+func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner service.OwnerModelInterface, key, name, description string) service.UserGroup {
 	userGorupRepo := ts.rf.NewUserGroupRepository(ctx)
 	groupID1, err := userGorupRepo.AddUserGroup(ctx, owner, testNewUserGroupAddParameter(t, key, name, description))
 	require.NoError(t, err)
@@ -209,6 +163,46 @@ func testAddUserGroup(t *testing.T, ctx context.Context, ts testService, owner d
 	require.Equal(t, description, group1.GetDescription())
 
 	return group1
+}
+
+type testSystemAdmin struct {
+	*domain.SystemAdminModel
+}
+
+func (m *testSystemAdmin) AppUserID() domain.AppUserID {
+	return m.SystemAdminModel.AppUserID()
+}
+func (m *testSystemAdmin) IsSystemAdmin() bool {
+	return true
+}
+func testNewSystemAdmin(systemAdminModel *domain.SystemAdminModel) *testSystemAdmin {
+	return &testSystemAdmin{
+		systemAdminModel,
+	}
+}
+
+type testAppUserModel struct {
+	*domain.AppUserModel
+}
+
+func (m *testAppUserModel) AppUserID() domain.AppUserID {
+	return m.AppUserModel.AppUserID
+}
+func (m *testAppUserModel) OrganizationID() domain.OrganizationID {
+	return m.AppUserModel.OrganizationID
+}
+func (m *testAppUserModel) LoginID() string {
+	return m.AppUserModel.LoginID
+}
+func (m *testAppUserModel) Username() string {
+	return m.AppUserModel.Username
+}
+
+func testNewAppUser(appUserModel *domain.AppUserModel) *testAppUserModel {
+	return &testAppUserModel{
+		appUserModel,
+	}
+
 }
 
 func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) service.AppUserAddParameter {
@@ -229,10 +223,12 @@ func getOrganization(t *testing.T, ctx context.Context, ts testService, orgID do
 	baseModel, err := libdomain.NewBaseModel(1, time.Now(), time.Now(), 1, 1)
 	require.NoError(t, err)
 	appUserID, _ := domain.NewAppUserID(1)
-	userModel, err := domain.NewAppUserModel(baseModel, appUserID, orgID, "login_id", "username", nil)
+	appUserModel, err := domain.NewAppUserModel(baseModel, appUserID, orgID, "login_id", "username", nil)
+	require.NoError(t, err)
+	appUser, err := service.NewAppUser(ctx, ts.rf, appUserModel)
 	require.NoError(t, err)
 
-	org, err := orgRepo.GetOrganization(ctx, userModel)
+	org, err := orgRepo.GetOrganization(ctx, appUser)
 	require.NoError(t, err)
 	require.Equal(t, orgNameLength, len(org.GetName()))
 

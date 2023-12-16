@@ -1,9 +1,11 @@
 package service
 
-import "github.com/kujilabo/redstart/lib/domain"
+import (
+	libdomain "github.com/kujilabo/redstart/lib/domain"
+)
 
 const (
-	UserServiceContextKey domain.ContextKey = "user_service"
+	UserServiceContextKey libdomain.ContextKey = "user_service"
 
 	SystemAdminLoginID = "__system_admin"
 	SystemOwnerLoginID = "__system_owner"

@@ -24,21 +24,23 @@ func Test_organizationRepository_GetOrganization(t *testing.T) {
 
 		// get organization registered
 		baseModel, err := libdomain.NewBaseModel(1, time.Now(), time.Now(), 1, 1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		appUserID, _ := domain.NewAppUserID(1)
 		userModel, err := domain.NewAppUserModel(baseModel, appUserID, orgID, "login_id", "username", nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
+		user := testNewAppUser(userModel)
 		{
-			org, err := orgRepo.GetOrganization(ctx, userModel)
+			org, err := orgRepo.GetOrganization(ctx, user)
 			assert.NoError(t, err)
 			assert.Equal(t, orgNameLength, len(org.GetName()))
 		}
 
 		// get organization unregistered
-		otherUserModel, err := domain.NewAppUserModel(baseModel, appUserID, invalidOrgID, "login_id", "username", nil)
+		otherAppUserModel, err := domain.NewAppUserModel(baseModel, appUserID, invalidOrgID, "login_id", "username", nil)
 		assert.NoError(t, err)
+		otherAppUser := testNewAppUser(otherAppUserModel)
 		{
-			_, err := orgRepo.GetOrganization(ctx, otherUserModel)
+			_, err := orgRepo.GetOrganization(ctx, otherAppUser)
 			assert.ErrorIs(t, err, service.ErrOrganizationNotFound)
 		}
 	}
@@ -51,6 +53,7 @@ func Test_organizationRepository_FindOrganizationByName(t *testing.T) {
 		orgID, _, _ := setupOrganization(ctx, t, ts)
 		defer teardownOrganization(t, ts, orgID)
 		sysAdModel := domain.NewSystemAdminModel()
+		sysAd := testNewSystemAdmin(sysAdModel)
 
 		orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
 
@@ -64,8 +67,9 @@ func Test_organizationRepository_FindOrganizationByName(t *testing.T) {
 
 		userModel, err := domain.NewAppUserModel(baseModel, appUserID, orgID, "login_id", "username", nil)
 		assert.NoError(t, err)
+		user := testNewAppUser(userModel)
 		{
-			org, err := orgRepo.GetOrganization(ctx, userModel)
+			org, err := orgRepo.GetOrganization(ctx, user)
 			assert.NoError(t, err)
 			assert.Equal(t, orgNameLength, len(org.GetName()))
 			orgName = org.GetName()
@@ -73,14 +77,14 @@ func Test_organizationRepository_FindOrganizationByName(t *testing.T) {
 
 		// find organization registered by name
 		{
-			org, err := orgRepo.FindOrganizationByName(ctx, sysAdModel, orgName)
+			org, err := orgRepo.FindOrganizationByName(ctx, sysAd, orgName)
 			assert.NoError(t, err)
 			assert.Equal(t, orgName, org.GetName())
 		}
 
 		// find organization unregistered by name
 		{
-			_, err := orgRepo.FindOrganizationByName(ctx, sysAdModel, "NOT_FOUND")
+			_, err := orgRepo.FindOrganizationByName(ctx, sysAd, "NOT_FOUND")
 			assert.Equal(t, service.ErrOrganizationNotFound, err)
 		}
 	}
@@ -93,6 +97,7 @@ func Test_organizationRepository_FindOrganizationByID(t *testing.T) {
 		orgID, _, _ := setupOrganization(ctx, t, ts)
 		defer teardownOrganization(t, ts, orgID)
 		sysAdModel := domain.NewSystemAdminModel()
+		sysAd := testNewSystemAdmin(sysAdModel)
 
 		orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
 
@@ -104,22 +109,23 @@ func Test_organizationRepository_FindOrganizationByID(t *testing.T) {
 
 		userModel, err := domain.NewAppUserModel(baseModel, appUserID, orgID, "login_id", "username", nil)
 		assert.NoError(t, err)
+		user := testNewAppUser(userModel)
 		{
-			org, err := orgRepo.GetOrganization(ctx, userModel)
+			org, err := orgRepo.GetOrganization(ctx, user)
 			assert.NoError(t, err)
 			assert.Equal(t, orgNameLength, len(org.GetName()))
 		}
 
 		// find organization registered by ID
 		{
-			org, err := orgRepo.FindOrganizationByID(ctx, sysAdModel, orgID)
+			org, err := orgRepo.FindOrganizationByID(ctx, sysAd, orgID)
 			assert.NoError(t, err)
 			assert.Equal(t, orgID.Int(), org.GetID().Int())
 		}
 
 		// find organization unregistered by ID
 		{
-			_, err := orgRepo.FindOrganizationByID(ctx, sysAdModel, invalidOrgID)
+			_, err := orgRepo.FindOrganizationByID(ctx, sysAd, invalidOrgID)
 			assert.Equal(t, service.ErrOrganizationNotFound, err)
 		}
 	}

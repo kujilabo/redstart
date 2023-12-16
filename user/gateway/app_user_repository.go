@@ -36,7 +36,19 @@ func (e *appUserEntity) TableName() string {
 	return AppUserTableName
 }
 
-func (e *appUserEntity) toAppUserModel(userGroups []domain.UserGroupModel) (domain.AppUserModel, error) {
+// func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userGroups []domain.UserGroupModel) (*service.AppUser, error) {
+// 	appUserModel, err := e.toAppUserModel(userGroups)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	appUser, err := service.NewAppUser(ctx, rf, appUserModel)
+// 	if err != nil {
+// 		return nil, err
+
+//		}
+//		return appUser, nil
+//	}
+func (e *appUserEntity) toAppUserModel(userGroups []domain.UserGroupModel) (*domain.AppUserModel, error) {
 	baseModel, err := e.toBaseModel()
 	if err != nil {
 		return nil, liberrors.Errorf("e.toModel. err: %w", err)
@@ -60,7 +72,7 @@ func (e *appUserEntity) toAppUserModel(userGroups []domain.UserGroupModel) (doma
 	return appUserModel, nil
 }
 
-func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (domain.OwnerModel, error) {
+func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (*domain.OwnerModel, error) {
 	appUserModel, err := e.toAppUserModel(userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel. err: %w", err)
@@ -74,7 +86,7 @@ func (e *appUserEntity) toOwnerModel(userGroups []domain.UserGroupModel) (domain
 	return ownerModel, nil
 }
 
-func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (service.SystemOwner, error) {
+func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (*service.SystemOwner, error) {
 	if e.LoginID != service.SystemOwnerLoginID {
 		return nil, liberrors.Errorf("invalid system owner. loginID: %s", e.LoginID)
 	}
@@ -97,7 +109,7 @@ func (e *appUserEntity) toSystemOwner(ctx context.Context, rf service.Repository
 	return systemOwner, nil
 }
 
-func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (service.Owner, error) {
+func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []domain.UserGroupModel) (*service.Owner, error) {
 	ownerModel, err := e.toOwnerModel(userGroup)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toOwnerModel(). err: %w", err)
@@ -106,7 +118,7 @@ func (e *appUserEntity) toOwner(rf service.RepositoryFactory, userGroup []domain
 	return service.NewOwner(rf, ownerModel), nil
 }
 
-func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userGroups []domain.UserGroupModel) (service.AppUser, error) {
+func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFactory, userGroups []domain.UserGroupModel) (*service.AppUser, error) {
 	appUserModel, err := e.toAppUserModel(userGroups)
 	if err != nil {
 		return nil, liberrors.Errorf("e.toAppUserModel(). err: %w", err)
@@ -127,7 +139,7 @@ func NewAppUserRepository(ctx context.Context, driverName string, db *gorm.DB, r
 	}
 }
 
-func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (service.SystemOwner, error) {
+func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (*service.SystemOwner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindSystemOwnerByOrganizationID")
 	defer span.End()
 
@@ -144,16 +156,16 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context,
 	return appUser.toSystemOwner(ctx, r.rf, nil)
 }
 
-func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Context, operator domain.SystemAdminModel, organizationName string, options ...service.Option) (service.SystemOwner, error) {
+func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Context, operator service.SystemAdminModelInterface, organizationName string, options ...service.Option) (*service.SystemOwner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindSystemOwnerByOrganizationName")
 	defer span.End()
 
-	appUser := appUserEntity{}
+	appUserE := appUserEntity{}
 	if result := r.db.Table("organization").Select("app_user.*").
 		Where("organization.name = ? and app_user.removed = 0", organizationName).
 		Where("login_id = ?", service.SystemOwnerLoginID).
 		Joins("inner join app_user on organization.id = app_user.organization_id").
-		First(&appUser); result.Error != nil {
+		First(&appUserE); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, liberrors.Errorf("system owner not found. organization name: %s, err: %w", organizationName, service.ErrSystemOwnerNotFound)
 		}
@@ -161,7 +173,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 		return nil, result.Error
 	}
 
-	appUserModel, err := appUser.toAppUserModel(nil)
+	appUser, err := appUserE.toAppUser(ctx, r.rf, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +182,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 	for _, option := range options {
 		if option == service.IncludeGroups {
 			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
-			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
+			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUser, appUser.AppUserID())
 			if err != nil {
 				return nil, err
 			}
@@ -179,17 +191,17 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 		}
 	}
 
-	return appUser.toSystemOwner(ctx, r.rf, userGroups)
+	return appUserE.toSystemOwner(ctx, r.rf, userGroups)
 }
 
-func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain.AppUserModel, id domain.AppUserID, options ...service.Option) (service.AppUser, error) {
+func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator service.AppUserModelInterface, id domain.AppUserID, options ...service.Option) (*service.AppUser, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByID")
 	defer span.End()
 
-	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	appUserE := appUserEntity{}
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
 	db := wrappedDB.WhereAppUser().Where("`app_user`.`id` = ?", id.Int()).db
-	if result := db.First(&appUser); result.Error != nil {
+	if result := db.First(&appUserE); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrAppUserNotFound
 		}
@@ -197,7 +209,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain
 		return nil, result.Error
 	}
 
-	appUserModel, err := appUser.toAppUserModel(nil)
+	appUser, err := appUserE.toAppUser(ctx, r.rf, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +221,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain
 		fmt.Printf("option: %s\n", option)
 		if option == service.IncludeGroups {
 			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
-			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUserModel, appUserModel.GetAppUserID())
+			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUser, appUser.AppUserID())
 			if err != nil {
 				return nil, err
 			}
@@ -220,15 +232,15 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator domain
 
 	fmt.Println(userGroups)
 
-	return appUser.toAppUser(ctx, r.rf, userGroups)
+	return appUserE.toAppUser(ctx, r.rf, userGroups)
 }
 
-func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator domain.AppUserModel, loginID string) (service.AppUser, error) {
+func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator service.AppUserModelInterface, loginID string) (*service.AppUser, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByLoginID")
 	defer span.End()
 
 	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
 	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", loginID).db
 	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -241,12 +253,12 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator d
 	return appUser.toAppUser(ctx, r.rf, nil)
 }
 
-func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator domain.SystemOwnerModel, loginID string) (service.Owner, error) {
+func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator service.SystemOwnerModelInterface, loginID string) (*service.Owner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindOwnerByLoginID")
 	defer span.End()
 
 	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.GetOrganizationID()}
+	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
 	db := wrappedDB.Table("`app_user`").Select("`app_user`.*").
 		WherePairOfUserAndGroup().
 		WhereUserGroup().
@@ -281,7 +293,7 @@ func (r *appUserRepository) addAppUser(ctx context.Context, appUserEntity *appUs
 	return appUserID, nil
 }
 
-func (r *appUserRepository) AddAppUser(ctx context.Context, operator domain.OwnerModel, param service.AppUserAddParameter) (domain.AppUserID, error) {
+func (r *appUserRepository) AddAppUser(ctx context.Context, operator service.OwnerModelInterface, param service.AppUserAddParameter) (domain.AppUserID, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.AddAppUser")
 	defer span.End()
 
@@ -298,10 +310,10 @@ func (r *appUserRepository) AddAppUser(ctx context.Context, operator domain.Owne
 	appUserEntity := appUserEntity{
 		BaseModelEntity: BaseModelEntity{
 			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
+			UpdatedBy: operator.AppUserID().Int(),
 		},
-		OrganizationID: operator.GetOrganizationID().Int(),
+		OrganizationID: operator.OrganizationID().Int(),
 		LoginID:        param.GetLoginID(),
 		Username:       param.GetUsername(),
 		HashedPassword: hashedPassword,
@@ -315,15 +327,15 @@ func (r *appUserRepository) AddAppUser(ctx context.Context, operator domain.Owne
 	return appUserID, nil
 }
 
-func (r *appUserRepository) AddSystemOwner(ctx context.Context, operator domain.SystemAdminModel, organizationID domain.OrganizationID) (domain.AppUserID, error) {
+func (r *appUserRepository) AddSystemOwner(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (domain.AppUserID, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.AddSystemOwner")
 	defer span.End()
 
 	appUserEntity := appUserEntity{
 		BaseModelEntity: BaseModelEntity{
 			Version:   1,
-			CreatedBy: operator.GetAppUserID().Int(),
-			UpdatedBy: operator.GetAppUserID().Int(),
+			CreatedBy: operator.AppUserID().Int(),
+			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
 		LoginID:        service.SystemOwnerLoginID,

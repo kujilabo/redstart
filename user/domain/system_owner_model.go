@@ -7,18 +7,18 @@ import (
 
 const SystemOwnerID = 2
 
-type SystemOwnerModel interface {
-	OwnerModel
-	IsSystemOwnerModel() bool
-}
+// type SystemOwnerModel interface {
+// 	OwnerModel
+// 	IsSystemOwnerModel() bool
+// }
 
-type systemOwnerModel struct {
-	OwnerModel
+type SystemOwnerModel struct {
+	*OwnerModel
 	AppUserID AppUserID
 }
 
-func NewSystemOwnerModel(appUser OwnerModel) (SystemOwnerModel, error) {
-	m := &systemOwnerModel{
+func NewSystemOwnerModel(appUser *OwnerModel) (*SystemOwnerModel, error) {
+	m := &SystemOwnerModel{
 		OwnerModel: appUser,
 	}
 
@@ -29,6 +29,6 @@ func NewSystemOwnerModel(appUser OwnerModel) (SystemOwnerModel, error) {
 	return m, nil
 }
 
-func (m *systemOwnerModel) IsSystemOwnerModel() bool {
-	return true
-}
+// func (m *systemOwnerModel) IsSystemOwnerModel() bool {
+// 	return true
+// }
