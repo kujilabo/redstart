@@ -21,6 +21,11 @@ func NewAuthorizationManager(ctx context.Context, db *gorm.DB, rf service.Reposi
 	}
 }
 
+func (m *authorizationManager) Init(ctx context.Context) error {
+	rbacRepo := newRBACRepository(ctx, m.db)
+	return rbacRepo.Init()
+}
+
 func (m *authorizationManager) AddUserToGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
 	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.db, m.rf)
 
