@@ -80,7 +80,7 @@ func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (
 	return org, nil
 }
 
-func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAddParameter) (*domain.OrganizationID, error) {
+func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAddParameterInterface) (*domain.OrganizationID, error) {
 	logger := liblog.GetLoggerFromContext(ctx, UserServiceContextKey)
 
 	// 1. add organization
@@ -103,7 +103,7 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 		return nil, liberrors.Errorf("failed to AddSystemOwner. error: %w", err)
 	}
 
-	systemOwner, err := m.appUserRepo.FindSystemOwnerByOrganizationName(ctx, m, param.GetName())
+	systemOwner, err := m.appUserRepo.FindSystemOwnerByOrganizationName(ctx, m, param.Name())
 	if err != nil {
 		return nil, liberrors.Errorf("failed to FindSystemOwnerByOrganizationName. error: %w", err)
 	}
@@ -169,7 +169,7 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 	}
 
 	// 6. add first owner
-	ownerID, err := systemOwner.AddFirstOwner(ctx, param.GetFirstOwner())
+	ownerID, err := systemOwner.AddFirstOwner(ctx, param.FirstOwner())
 	if err != nil {
 		return nil, liberrors.Errorf("m.initFirstOwner. error: %w", err)
 	}

@@ -6,10 +6,6 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-// type Organization interface {
-// 	domain.OrganizationModel
-// }
-
 type Organization struct {
 	*domain.OrganizationModel
 }

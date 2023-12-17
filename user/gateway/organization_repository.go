@@ -111,7 +111,7 @@ func (r *organizationRepository) FindOrganizationByID(ctx context.Context, opera
 	return organization.toModel()
 }
 
-func (r *organizationRepository) AddOrganization(ctx context.Context, operator service.SystemAdminModelInterface, param service.OrganizationAddParameter) (*domain.OrganizationID, error) {
+func (r *organizationRepository) AddOrganization(ctx context.Context, operator service.SystemAdminModelInterface, param service.OrganizationAddParameterInterface) (*domain.OrganizationID, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.AddOrganization")
 	defer span.End()
 
@@ -121,7 +121,7 @@ func (r *organizationRepository) AddOrganization(ctx context.Context, operator s
 			CreatedBy: operator.AppUserID().Int(),
 			UpdatedBy: operator.AppUserID().Int(),
 		},
-		Name: param.GetName(),
+		Name: param.Name(),
 	}
 
 	if result := r.db.Create(&organization); result.Error != nil {
