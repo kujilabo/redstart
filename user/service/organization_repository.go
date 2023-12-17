@@ -11,8 +11,8 @@ import (
 )
 
 type AppUserModelInterface interface {
-	AppUserID() domain.AppUserID
-	OrganizationID() domain.OrganizationID
+	AppUserID() *domain.AppUserID
+	OrganizationID() *domain.OrganizationID
 	LoginID() string
 	Username() string
 	// GetUserGroups() []domain.UserGroupModel
@@ -28,7 +28,7 @@ type SystemOwnerModelInterface interface {
 	// GetUserGroups() []domain.UserGroupModel
 }
 type SystemAdminModelInterface interface {
-	AppUserID() domain.AppUserID
+	AppUserID() *domain.AppUserID
 	IsSystemAdmin() bool
 	// GetUserGroups() []domain.UserGroupModel
 }
@@ -102,13 +102,13 @@ func (p *organizationAddParameter) GetFirstOwner() FirstOwnerAddParameter {
 }
 
 type OrganizationRepository interface {
-	GetOrganization(ctx context.Context, operator AppUserModelInterface) (Organization, error)
+	GetOrganization(ctx context.Context, operator AppUserModelInterface) (*Organization, error)
 
-	FindOrganizationByName(ctx context.Context, operator SystemAdminModelInterface, name string) (Organization, error)
+	FindOrganizationByName(ctx context.Context, operator SystemAdminModelInterface, name string) (*Organization, error)
 
-	FindOrganizationByID(ctx context.Context, operator SystemAdminModelInterface, id domain.OrganizationID) (Organization, error)
+	FindOrganizationByID(ctx context.Context, operator SystemAdminModelInterface, id *domain.OrganizationID) (*Organization, error)
 
-	AddOrganization(ctx context.Context, operator SystemAdminModelInterface, param OrganizationAddParameter) (domain.OrganizationID, error)
+	AddOrganization(ctx context.Context, operator SystemAdminModelInterface, param OrganizationAddParameter) (*domain.OrganizationID, error)
 
 	// FindOrganizationByName(ctx context.Context, operator SystemAdmin, name string) (Organization, error)
 	// FindOrganization(ctx context.Context, operator AppUser) (Organization, error)

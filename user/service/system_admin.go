@@ -46,14 +46,14 @@ func NewSystemAdmin(ctx context.Context, rf RepositoryFactory) (*SystemAdmin, er
 	return m, nil
 }
 
-func (m *SystemAdmin) AppUserID() domain.AppUserID {
-	return m.SystemAdminModel.AppUserID()
+func (m *SystemAdmin) AppUserID() *domain.AppUserID {
+	return m.SystemAdminModel.AppUserID
 }
 func (m *SystemAdmin) IsSystemAdmin() bool {
 	return true
 }
 
-func (m *SystemAdmin) FindSystemOwnerByOrganizationID(ctx context.Context, organizationID domain.OrganizationID) (*SystemOwner, error) {
+func (m *SystemAdmin) FindSystemOwnerByOrganizationID(ctx context.Context, organizationID *domain.OrganizationID) (*SystemOwner, error) {
 	sysOwner, err := m.appUserRepo.FindSystemOwnerByOrganizationID(ctx, m, organizationID)
 	if err != nil {
 		return nil, liberrors.Errorf("m.appUserRepo.FindSystemOwnerByOrganizationID. error: %w", err)
@@ -71,7 +71,7 @@ func (m *SystemAdmin) FindSystemOwnerByOrganizationName(ctx context.Context, org
 	return sysOwner, nil
 }
 
-func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (Organization, error) {
+func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (*Organization, error) {
 	org, err := m.orgRepo.FindOrganizationByName(ctx, m, name)
 	if err != nil {
 		return nil, liberrors.Errorf("m.orgRepo.FindOrganizationByName. error: %w", err)
@@ -80,7 +80,7 @@ func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (
 	return org, nil
 }
 
-func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAddParameter) (domain.OrganizationID, error) {
+func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAddParameter) (*domain.OrganizationID, error) {
 	logger := liblog.GetLoggerFromContext(ctx, UserServiceContextKey)
 
 	// 1. add organization
@@ -179,26 +179,26 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 	return organizationID, nil
 }
 
-func NewRBACOrganization(organizationID domain.OrganizationID) domain.RBACDomain {
+func NewRBACOrganization(organizationID *domain.OrganizationID) domain.RBACDomain {
 	return domain.NewRBACDomain(fmt.Sprintf("domain:%d", organizationID.Int()))
 }
 
-func NewRBACAppUser(organizationID domain.OrganizationID, appUserID domain.AppUserID) domain.RBACUser {
+func NewRBACAppUser(organizationID *domain.OrganizationID, appUserID *domain.AppUserID) domain.RBACUser {
 	return domain.NewRBACUser(fmt.Sprintf("user:%d", appUserID.Int()))
 }
 
 //	func NewRBACUserRole(userRoleID domain.UserGroupID) domain.RBACRole {
 //		return domain.NewRBACRole(fmt.Sprintf("role_%d", userRoleID.Int()))
 //	}
-func NewRBACUserRole(organizationID domain.OrganizationID, userGroupID domain.UserGroupID) domain.RBACRole {
+func NewRBACUserRole(organizationID *domain.OrganizationID, userGroupID *domain.UserGroupID) domain.RBACRole {
 	return domain.NewRBACRole(fmt.Sprintf("domain:%d_role:%d", organizationID.Int(), userGroupID.Int()))
 }
 
-func NewRBACUserRoleObject(organizationID domain.OrganizationID, userRoleID domain.UserGroupID) domain.RBACObject {
+func NewRBACUserRoleObject(organizationID *domain.OrganizationID, userRoleID *domain.UserGroupID) domain.RBACObject {
 	return domain.NewRBACObject(fmt.Sprintf("domain:%d_role:%d", organizationID.Int(), userRoleID.Int()))
 }
 
-func NewRBACAllUserRolesObject(organizationID domain.OrganizationID) domain.RBACObject {
+func NewRBACAllUserRolesObject(organizationID *domain.OrganizationID) domain.RBACObject {
 	return domain.NewRBACObject(fmt.Sprintf("domain:%d_role:*", organizationID.Int()))
 }
 

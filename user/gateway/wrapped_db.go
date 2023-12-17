@@ -14,7 +14,7 @@ type HasTableName interface {
 
 type wrappedDB struct {
 	db             *gorm.DB
-	organizationID domain.OrganizationID
+	organizationID *domain.OrganizationID
 }
 
 func (x *wrappedDB) Table(name string, args ...interface{}) *wrappedDB {
@@ -37,7 +37,7 @@ func (x *wrappedDB) Joins(query string, args ...interface{}) *wrappedDB {
 	return x
 }
 
-func (x *wrappedDB) WhereOrganizationID(table HasTableName, organizationID domain.OrganizationID) *wrappedDB {
+func (x *wrappedDB) WhereOrganizationID(table HasTableName, organizationID *domain.OrganizationID) *wrappedDB {
 	x.db = x.db.Where(fmt.Sprintf("%s.`organization_id` = ?", table.TableName()), organizationID.Int())
 	return x
 }

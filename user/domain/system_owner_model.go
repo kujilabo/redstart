@@ -5,7 +5,7 @@ import (
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
-const SystemOwnerID = 2
+// const SystemOwnerID = 2
 
 // type SystemOwnerModel interface {
 // 	OwnerModel
@@ -14,7 +14,7 @@ const SystemOwnerID = 2
 
 type SystemOwnerModel struct {
 	*OwnerModel
-	AppUserID AppUserID
+	// AppUserID AppUserID
 }
 
 func NewSystemOwnerModel(appUser *OwnerModel) (*SystemOwnerModel, error) {

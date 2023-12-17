@@ -49,7 +49,7 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {
 		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
 
 		{
-			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, org.GetName())
+			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, org.Name())
 			require.NoError(t, err)
 			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
 		}

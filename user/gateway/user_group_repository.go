@@ -100,7 +100,7 @@ func (r *userGroupRepository) FindAllUserGroups(ctx context.Context, operator se
 	return userGroupModels, nil
 }
 
-func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (*service.UserGroup, error) {
+func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID *domain.OrganizationID) (*service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindSystemOwnerGroup")
 	defer span.End()
 
@@ -114,7 +114,7 @@ func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator service.AppUserModelInterface, userGroupID domain.UserGroupID) (*service.UserGroup, error) {
+func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator service.AppUserModelInterface, userGroupID *domain.UserGroupID) (*service.UserGroup, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.FindUserGroupByID")
 	defer span.End()
 
@@ -140,7 +140,7 @@ func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator s
 	return userGroup.toUserGroup()
 }
 
-func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID) (domain.UserGroupID, error) {
+func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator service.SystemAdminModelInterface, organizationID *domain.OrganizationID) (*domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddSystemOwnerGroup")
 	defer span.End()
 
@@ -166,7 +166,7 @@ func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator 
 	return userGroupID, nil
 }
 
-func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator service.SystemOwnerModelInterface, organizationID domain.OrganizationID) (domain.UserGroupID, error) {
+func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator service.SystemOwnerModelInterface, organizationID *domain.OrganizationID) (*domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddOwnerGroup")
 	defer span.End()
 
@@ -192,7 +192,7 @@ func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator servic
 	return userGroupID, nil
 }
 
-func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service.OwnerModelInterface, parameter service.UserGroupAddParameter) (domain.UserGroupID, error) {
+func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service.OwnerModelInterface, parameter service.UserGroupAddParameter) (*domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddUserGroup")
 	defer span.End()
 

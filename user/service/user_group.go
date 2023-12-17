@@ -27,10 +27,10 @@ func NewUserGroup(userGroupModel *domain.UserGroupModel) (*UserGroup, error) {
 	return m, nil
 }
 
-func (m *UserGroup) UserGroupID() domain.UserGroupID {
+func (m *UserGroup) UserGroupID() *domain.UserGroupID {
 	return m.UserGroupModel.UserGroupID
 }
-func (m *UserGroup) OrganizationID() domain.OrganizationID {
+func (m *UserGroup) OrganizationID() *domain.OrganizationID {
 	return m.UserGroupModel.OrganizationID
 }
 func (m *UserGroup) Key() string {

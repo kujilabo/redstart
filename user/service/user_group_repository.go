@@ -46,13 +46,13 @@ func (p *userGroupAddParameter) GetDescription() string {
 type UserGroupRepository interface {
 	FindAllUserGroups(ctx context.Context, operator AppUserModelInterface) ([]*domain.UserGroupModel, error)
 
-	FindSystemOwnerGroup(ctx context.Context, operator SystemAdminModelInterface, organizationID domain.OrganizationID) (*UserGroup, error)
+	FindSystemOwnerGroup(ctx context.Context, operator SystemAdminModelInterface, organizationID *domain.OrganizationID) (*UserGroup, error)
 
 	FindUserGroupByKey(ctx context.Context, operator AppUserModelInterface, key string) (*UserGroup, error)
-	FindUserGroupByID(ctx context.Context, operator AppUserModelInterface, userGroupID domain.UserGroupID) (*UserGroup, error)
-	AddOwnerGroup(ctx context.Context, operator SystemOwnerModelInterface, organizationID domain.OrganizationID) (domain.UserGroupID, error)
+	FindUserGroupByID(ctx context.Context, operator AppUserModelInterface, userGroupID *domain.UserGroupID) (*UserGroup, error)
+	AddOwnerGroup(ctx context.Context, operator SystemOwnerModelInterface, organizationID *domain.OrganizationID) (*domain.UserGroupID, error)
 
-	AddSystemOwnerGroup(ctx context.Context, operator SystemAdminModelInterface, organizationID domain.OrganizationID) (domain.UserGroupID, error)
+	AddSystemOwnerGroup(ctx context.Context, operator SystemAdminModelInterface, organizationID *domain.OrganizationID) (*domain.UserGroupID, error)
 
-	AddUserGroup(ctx context.Context, operator OwnerModelInterface, parameter UserGroupAddParameter) (domain.UserGroupID, error)
+	AddUserGroup(ctx context.Context, operator OwnerModelInterface, parameter UserGroupAddParameter) (*domain.UserGroupID, error)
 }

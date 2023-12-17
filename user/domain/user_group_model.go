@@ -5,25 +5,25 @@ import (
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
-type UserGroupID interface {
-	Int() int
-	IsUserGroupID() bool
-}
+// type UserGroupID interface {
+// 	Int() int
+// 	IsUserGroupID() bool
+// }
 
-type userGroupID struct {
+type UserGroupID struct {
 	Value int
 }
 
-func NewUserGroupID(value int) (UserGroupID, error) {
-	return &userGroupID{
+func NewUserGroupID(value int) (*UserGroupID, error) {
+	return &UserGroupID{
 		Value: value,
 	}, nil
 }
 
-func (v *userGroupID) Int() int {
+func (v *UserGroupID) Int() int {
 	return v.Value
 }
-func (v *userGroupID) IsUserGroupID() bool {
+func (v *UserGroupID) IsUserGroupID() bool {
 	return true
 }
 
@@ -39,15 +39,15 @@ func (v *userGroupID) IsUserGroupID() bool {
 
 type UserGroupModel struct {
 	libdomain.BaseModel
-	UserGroupID    UserGroupID
-	OrganizationID OrganizationID
+	UserGroupID    *UserGroupID
+	OrganizationID *OrganizationID
 	Key            string `validate:"required"`
 	Name           string `validate:"required"`
 	Description    string
 }
 
 // NewUserGroupModel returns a new UserGroupModel
-func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID UserGroupID, organizationID OrganizationID, key, name, description string) (*UserGroupModel, error) {
+func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID *UserGroupID, organizationID *OrganizationID, key, name, description string) (*UserGroupModel, error) {
 	m := &UserGroupModel{
 		BaseModel:      baseModel,
 		UserGroupID:    userGroupID,

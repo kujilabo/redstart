@@ -32,7 +32,7 @@ func Test_organizationRepository_GetOrganization(t *testing.T) {
 		{
 			org, err := orgRepo.GetOrganization(ctx, user)
 			assert.NoError(t, err)
-			assert.Equal(t, orgNameLength, len(org.GetName()))
+			assert.Equal(t, orgNameLength, len(org.Name()))
 		}
 
 		// get organization unregistered
@@ -71,15 +71,15 @@ func Test_organizationRepository_FindOrganizationByName(t *testing.T) {
 		{
 			org, err := orgRepo.GetOrganization(ctx, user)
 			assert.NoError(t, err)
-			assert.Equal(t, orgNameLength, len(org.GetName()))
-			orgName = org.GetName()
+			assert.Equal(t, orgNameLength, len(org.Name()))
+			orgName = org.Name()
 		}
 
 		// find organization registered by name
 		{
 			org, err := orgRepo.FindOrganizationByName(ctx, sysAd, orgName)
 			assert.NoError(t, err)
-			assert.Equal(t, orgName, org.GetName())
+			assert.Equal(t, orgName, org.Name())
 		}
 
 		// find organization unregistered by name
@@ -113,14 +113,14 @@ func Test_organizationRepository_FindOrganizationByID(t *testing.T) {
 		{
 			org, err := orgRepo.GetOrganization(ctx, user)
 			assert.NoError(t, err)
-			assert.Equal(t, orgNameLength, len(org.GetName()))
+			assert.Equal(t, orgNameLength, len(org.Name()))
 		}
 
 		// find organization registered by ID
 		{
 			org, err := orgRepo.FindOrganizationByID(ctx, sysAd, orgID)
 			assert.NoError(t, err)
-			assert.Equal(t, orgID.Int(), org.GetID().Int())
+			assert.Equal(t, orgID.Int(), org.OrganizationID().Int())
 		}
 
 		// find organization unregistered by ID
