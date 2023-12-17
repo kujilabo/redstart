@@ -115,7 +115,7 @@ func (m *SystemOwner) FindAppUserByLoginID(ctx context.Context, loginID string) 
 // 	return appUserID, nil
 // }
 
-func (m *SystemOwner) AddFirstOwner(ctx context.Context, param FirstOwnerAddParameter) (*domain.AppUserID, error) {
+func (m *SystemOwner) AddFirstOwner(ctx context.Context, param AppUserAddParameterInterface) (*domain.AppUserID, error) {
 	// rbacAppUser := NewRBACAppUser(m.GetOrganizationID(), m.GetAppUserID())
 	rbacAllUserRolesObject := NewRBACAllUserRolesObject(m.OrganizationID())
 

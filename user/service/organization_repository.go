@@ -36,53 +36,53 @@ type SystemAdminModelInterface interface {
 var ErrOrganizationNotFound = errors.New("organization not found")
 var ErrOrganizationAlreadyExists = errors.New("organization already exists")
 
-type FirstOwnerAddParameter interface {
-	GetLoginID() string
-	GetUsername() string
-	GetPassword() string
-}
+// type FirstOwnerAddParameter interface {
+// 	GetLoginID() string
+// 	GetUsername() string
+// 	GetPassword() string
+// }
 
-type firstOwnerAddParameter struct {
-	LoginID  string `validate:"required"`
-	Username string `validate:"required"`
-	Password string `validate:"required"`
-}
+// type firstOwnerAddParameter struct {
+// 	LoginID  string `validate:"required"`
+// 	Username string `validate:"required"`
+// 	Password string `validate:"required"`
+// }
 
-func NewFirstOwnerAddParameter(loginID, username, password string) (FirstOwnerAddParameter, error) {
-	m := &firstOwnerAddParameter{
-		LoginID:  loginID,
-		Username: username,
-		Password: password,
-	}
+// func NewFirstOwnerAddParameter(loginID, username, password string) (FirstOwnerAddParameter, error) {
+// 	m := &firstOwnerAddParameter{
+// 		LoginID:  loginID,
+// 		Username: username,
+// 		Password: password,
+// 	}
 
-	if err := libdomain.Validator.Struct(m); err != nil {
-		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
-	}
+// 	if err := libdomain.Validator.Struct(m); err != nil {
+// 		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
+// 	}
 
-	return m, nil
-}
+// 	return m, nil
+// }
 
-func (p *firstOwnerAddParameter) GetLoginID() string {
-	return p.LoginID
-}
-func (p *firstOwnerAddParameter) GetUsername() string {
-	return p.Username
-}
-func (p *firstOwnerAddParameter) GetPassword() string {
-	return p.Password
-}
+// func (p *firstOwnerAddParameter) GetLoginID() string {
+// 	return p.LoginID
+// }
+// func (p *firstOwnerAddParameter) GetUsername() string {
+// 	return p.Username
+// }
+// func (p *firstOwnerAddParameter) GetPassword() string {
+// 	return p.Password
+// }
 
 type OrganizationAddParameter interface {
 	GetName() string
-	GetFirstOwner() FirstOwnerAddParameter
+	GetFirstOwner() AppUserAddParameterInterface
 }
 
 type organizationAddParameter struct {
 	Name       string `validate:"required"`
-	FirstOwner FirstOwnerAddParameter
+	FirstOwner AppUserAddParameterInterface
 }
 
-func NewOrganizationAddParameter(name string, firstOwner FirstOwnerAddParameter) (OrganizationAddParameter, error) {
+func NewOrganizationAddParameter(name string, firstOwner AppUserAddParameterInterface) (OrganizationAddParameter, error) {
 	m := &organizationAddParameter{
 		Name:       name,
 		FirstOwner: firstOwner,
@@ -97,7 +97,7 @@ func NewOrganizationAddParameter(name string, firstOwner FirstOwnerAddParameter)
 func (p *organizationAddParameter) GetName() string {
 	return p.Name
 }
-func (p *organizationAddParameter) GetFirstOwner() FirstOwnerAddParameter {
+func (p *organizationAddParameter) GetFirstOwner() AppUserAddParameterInterface {
 	return p.FirstOwner
 }
 

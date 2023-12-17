@@ -26,7 +26,7 @@ func NewOwner(rf RepositoryFactory, ownerModel *domain.OwnerModel) *Owner {
 	return m
 }
 
-func (m *Owner) AddAppUser(ctx context.Context, param AppUserAddParameter) (*domain.AppUserID, error) {
+func (m *Owner) AddAppUser(ctx context.Context, param AppUserAddParameterInterface) (*domain.AppUserID, error) {
 	appUserRepo := m.rf.NewAppUserRepository(ctx)
 	appUserID, err := appUserRepo.AddAppUser(ctx, m, param)
 	if err != nil {

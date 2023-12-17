@@ -70,7 +70,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	sysAd, err := service.NewSystemAdmin(ctx, ts.rf)
 	require.NoError(t, err)
 
-	firstOwnerAddParam, err := service.NewFirstOwnerAddParameter("OWNER_ID", "OWNER_NAME", "OWNER_PASSWORD")
+	firstOwnerAddParam, err := service.NewAppUserAddParameter("OWNER_ID", "OWNER_NAME", "OWNER_PASSWORD")
 	require.NoError(t, err)
 	orgAddParam, err := service.NewOrganizationAddParameter(orgName, firstOwnerAddParam)
 	require.NoError(t, err)
@@ -127,7 +127,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	err = authorizationManager.AddUserToGroup(ctx, sysOwner, ownerID, ownerGroupID)
 	require.NoError(t, err)
 
-	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.GetLoginID())
+	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.LoginID())
 	require.NoError(t, err)
 
 	return orgID, sysOwner, owner
@@ -231,7 +231,7 @@ func testNewUserGroups(userGroupModels []*domain.UserGroupModel) []*testUserGrou
 	return groups
 }
 
-func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) service.AppUserAddParameter {
+func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) *service.AppUserAddParameter {
 	p, err := service.NewAppUserAddParameter(loginID, username, password)
 	require.NoError(t, err)
 	return p

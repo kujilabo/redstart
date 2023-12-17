@@ -14,30 +14,27 @@ var ErrAppUserAlreadyExists = errors.New("AppUser already exists")
 
 var ErrSystemOwnerNotFound = errors.New("SystemOwner not found")
 
-type AppUserAddParameter interface {
-	GetLoginID() string
-	GetUsername() string
-	GetPassword() string
+type AppUserAddParameterInterface interface {
+	LoginID() string
+	Username() string
+	Password() string
 	// GetRoles() []string
 	// GetDetails() string
 }
 
-type appUserAddParameter struct {
-	LoginID  string
-	Username string
-	Password string
+type AppUserAddParameter struct {
+	LoginID_  string
+	Username_ string
+	Password_ string
 	// Roles    []string
 	// Details  string
 }
 
-func NewAppUserAddParameter(loginID, username, password string,
-
-// , roles []string, details string
-) (AppUserAddParameter, error) {
-	m := &appUserAddParameter{
-		LoginID:  loginID,
-		Username: username,
-		Password: password,
+func NewAppUserAddParameter(loginID, username, password string) (*AppUserAddParameter, error) {
+	m := &AppUserAddParameter{
+		LoginID_:  loginID,
+		Username_: username,
+		Password_: password,
 		// Roles:    roles,
 		// Details:  details,
 	}
@@ -48,14 +45,14 @@ func NewAppUserAddParameter(loginID, username, password string,
 	return m, nil
 }
 
-func (p *appUserAddParameter) GetLoginID() string {
-	return p.LoginID
+func (p *AppUserAddParameter) LoginID() string {
+	return p.LoginID_
 }
-func (p *appUserAddParameter) GetUsername() string {
-	return p.Username
+func (p *AppUserAddParameter) Username() string {
+	return p.Username_
 }
-func (p *appUserAddParameter) GetPassword() string {
-	return p.Password
+func (p *AppUserAddParameter) Password() string {
+	return p.Password_
 }
 
 // func (p *appUserAddParameter) GetRoles() []string {
@@ -80,7 +77,7 @@ type AppUserRepository interface {
 
 	FindOwnerByLoginID(ctx context.Context, operator SystemOwnerModelInterface, loginID string) (*Owner, error)
 
-	AddAppUser(ctx context.Context, operator OwnerModelInterface, param AppUserAddParameter) (*domain.AppUserID, error)
+	AddAppUser(ctx context.Context, operator OwnerModelInterface, param AppUserAddParameterInterface) (*domain.AppUserID, error)
 
 	AddSystemOwner(ctx context.Context, operator SystemAdminModelInterface, organizationID *domain.OrganizationID) (*domain.AppUserID, error)
 

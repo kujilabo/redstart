@@ -288,13 +288,13 @@ func (r *appUserRepository) addAppUser(ctx context.Context, appUserEntity *appUs
 	return appUserID, nil
 }
 
-func (r *appUserRepository) AddAppUser(ctx context.Context, operator service.OwnerModelInterface, param service.AppUserAddParameter) (*domain.AppUserID, error) {
+func (r *appUserRepository) AddAppUser(ctx context.Context, operator service.OwnerModelInterface, param service.AppUserAddParameterInterface) (*domain.AppUserID, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.AddAppUser")
 	defer span.End()
 
 	hashedPassword := ""
-	if len(param.GetPassword()) != 0 {
-		hashedPasswordTmp, err := libgateway.HashPassword(param.GetPassword())
+	if len(param.Password()) != 0 {
+		hashedPasswordTmp, err := libgateway.HashPassword(param.Password())
 		if err != nil {
 			return nil, liberrors.Errorf("libgateway.HashPassword. err: %w", err)
 		}
@@ -309,8 +309,8 @@ func (r *appUserRepository) AddAppUser(ctx context.Context, operator service.Own
 			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: operator.OrganizationID().Int(),
-		LoginID:        param.GetLoginID(),
-		Username:       param.GetUsername(),
+		LoginID:        param.LoginID(),
+		Username:       param.Username(),
 		HashedPassword: hashedPassword,
 	}
 
