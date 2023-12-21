@@ -9,19 +9,13 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-var _ SystemAdminModelInterface = (*SystemAdmin)(nil)
+var _ SystemAdminInterface = (*SystemAdmin)(nil)
 
-// type SystemAdminInterface interface {
-// 	domain.SystemAdminModel
-
-// 	FindSystemOwnerByOrganizationID(ctx context.Context, organizationID domain.OrganizationID) (SystemOwner, error)
-
-// 	FindSystemOwnerByOrganizationName(ctx context.Context, organizationName string) (SystemOwner, error)
-
-// 	FindOrganizationByName(ctx context.Context, name string) (Organization, error)
-
-// 	AddOrganization(ctx context.Context, parma OrganizationAddParameter) (domain.OrganizationID, error)
-// }
+type SystemAdminInterface interface {
+	AppUserID() *domain.AppUserID
+	IsSystemAdmin() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type SystemAdmin struct {
 	*domain.SystemAdminModel
@@ -41,19 +35,17 @@ func NewSystemAdmin(ctx context.Context, rf RepositoryFactory) (*SystemAdmin, er
 		appUserRepo:      appUserRepo,
 	}
 
-	var _ SystemAdminModelInterface = m
-
 	return m, nil
 }
 
-func (m *SystemAdmin) AppUserID() domain.AppUserID {
-	return m.SystemAdminModel.AppUserID()
+func (m *SystemAdmin) AppUserID() *domain.AppUserID {
+	return m.SystemAdminModel.AppUserID
 }
 func (m *SystemAdmin) IsSystemAdmin() bool {
 	return true
 }
 
-func (m *SystemAdmin) FindSystemOwnerByOrganizationID(ctx context.Context, organizationID domain.OrganizationID) (*SystemOwner, error) {
+func (m *SystemAdmin) FindSystemOwnerByOrganizationID(ctx context.Context, organizationID *domain.OrganizationID) (*SystemOwner, error) {
 	sysOwner, err := m.appUserRepo.FindSystemOwnerByOrganizationID(ctx, m, organizationID)
 	if err != nil {
 		return nil, liberrors.Errorf("m.appUserRepo.FindSystemOwnerByOrganizationID. error: %w", err)
@@ -71,7 +63,7 @@ func (m *SystemAdmin) FindSystemOwnerByOrganizationName(ctx context.Context, org
 	return sysOwner, nil
 }
 
-func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (Organization, error) {
+func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (*Organization, error) {
 	org, err := m.orgRepo.FindOrganizationByName(ctx, m, name)
 	if err != nil {
 		return nil, liberrors.Errorf("m.orgRepo.FindOrganizationByName. error: %w", err)
@@ -80,7 +72,7 @@ func (m *SystemAdmin) FindOrganizationByName(ctx context.Context, name string) (
 	return org, nil
 }
 
-func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAddParameter) (domain.OrganizationID, error) {
+func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAddParameterInterface) (*domain.OrganizationID, error) {
 	logger := liblog.GetLoggerFromContext(ctx, UserServiceContextKey)
 
 	// 1. add organization
@@ -103,7 +95,7 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 		return nil, liberrors.Errorf("failed to AddSystemOwner. error: %w", err)
 	}
 
-	systemOwner, err := m.appUserRepo.FindSystemOwnerByOrganizationName(ctx, m, param.GetName())
+	systemOwner, err := m.appUserRepo.FindSystemOwnerByOrganizationName(ctx, m, param.Name())
 	if err != nil {
 		return nil, liberrors.Errorf("failed to FindSystemOwnerByOrganizationName. error: %w", err)
 	}
@@ -169,7 +161,7 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 	}
 
 	// 6. add first owner
-	ownerID, err := systemOwner.AddFirstOwner(ctx, param.GetFirstOwner())
+	ownerID, err := systemOwner.AddFirstOwner(ctx, param.FirstOwner())
 	if err != nil {
 		return nil, liberrors.Errorf("m.initFirstOwner. error: %w", err)
 	}
@@ -179,26 +171,26 @@ func (m *SystemAdmin) AddOrganization(ctx context.Context, param OrganizationAdd
 	return organizationID, nil
 }
 
-func NewRBACOrganization(organizationID domain.OrganizationID) domain.RBACDomain {
+func NewRBACOrganization(organizationID *domain.OrganizationID) domain.RBACDomain {
 	return domain.NewRBACDomain(fmt.Sprintf("domain:%d", organizationID.Int()))
 }
 
-func NewRBACAppUser(organizationID domain.OrganizationID, appUserID domain.AppUserID) domain.RBACUser {
+func NewRBACAppUser(organizationID *domain.OrganizationID, appUserID *domain.AppUserID) domain.RBACUser {
 	return domain.NewRBACUser(fmt.Sprintf("user:%d", appUserID.Int()))
 }
 
 //	func NewRBACUserRole(userRoleID domain.UserGroupID) domain.RBACRole {
 //		return domain.NewRBACRole(fmt.Sprintf("role_%d", userRoleID.Int()))
 //	}
-func NewRBACUserRole(organizationID domain.OrganizationID, userGroupID domain.UserGroupID) domain.RBACRole {
+func NewRBACUserRole(organizationID *domain.OrganizationID, userGroupID *domain.UserGroupID) domain.RBACRole {
 	return domain.NewRBACRole(fmt.Sprintf("domain:%d_role:%d", organizationID.Int(), userGroupID.Int()))
 }
 
-func NewRBACUserRoleObject(organizationID domain.OrganizationID, userRoleID domain.UserGroupID) domain.RBACObject {
+func NewRBACUserRoleObject(organizationID *domain.OrganizationID, userRoleID *domain.UserGroupID) domain.RBACObject {
 	return domain.NewRBACObject(fmt.Sprintf("domain:%d_role:%d", organizationID.Int(), userRoleID.Int()))
 }
 
-func NewRBACAllUserRolesObject(organizationID domain.OrganizationID) domain.RBACObject {
+func NewRBACAllUserRolesObject(organizationID *domain.OrganizationID) domain.RBACObject {
 	return domain.NewRBACObject(fmt.Sprintf("domain:%d_role:*", organizationID.Int()))
 }
 

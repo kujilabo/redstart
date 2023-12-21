@@ -6,16 +6,12 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-type Organization interface {
-	domain.OrganizationModel
+type Organization struct {
+	*domain.OrganizationModel
 }
 
-type organization struct {
-	domain.OrganizationModel
-}
-
-func NewOrganization(organizationModel domain.OrganizationModel) (Organization, error) {
-	m := &organization{
+func NewOrganization(organizationModel *domain.OrganizationModel) (*Organization, error) {
+	m := &Organization{
 		organizationModel,
 	}
 
@@ -24,4 +20,11 @@ func NewOrganization(organizationModel domain.OrganizationModel) (Organization, 
 	}
 
 	return m, nil
+}
+
+func (m *Organization) OrganizationID() *domain.OrganizationID {
+	return m.OrganizationModel.OrganizationID
+}
+func (m *Organization) Name() string {
+	return m.OrganizationModel.Name
 }

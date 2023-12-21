@@ -7,10 +7,11 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-// type Owner interface {
-// 	// domain.OwnerModel
-// 	AddAppUser(ctx context.Context, param AppUserAddParameter) (domain.AppUserID, error)
-// }
+type OwnerModelInterface interface {
+	AppUserInterface
+	IsOwner() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type Owner struct {
 	rf RepositoryFactory
@@ -26,7 +27,7 @@ func NewOwner(rf RepositoryFactory, ownerModel *domain.OwnerModel) *Owner {
 	return m
 }
 
-func (m *Owner) AddAppUser(ctx context.Context, param AppUserAddParameter) (domain.AppUserID, error) {
+func (m *Owner) AddAppUser(ctx context.Context, param AppUserAddParameterInterface) (*domain.AppUserID, error) {
 	appUserRepo := m.rf.NewAppUserRepository(ctx)
 	appUserID, err := appUserRepo.AddAppUser(ctx, m, param)
 	if err != nil {
@@ -36,10 +37,10 @@ func (m *Owner) AddAppUser(ctx context.Context, param AppUserAddParameter) (doma
 	return appUserID, nil
 }
 
-func (m *Owner) AppUserID() domain.AppUserID {
+func (m *Owner) AppUserID() *domain.AppUserID {
 	return m.AppUserModel.AppUserID
 }
-func (m *Owner) OrganizationID() domain.OrganizationID {
+func (m *Owner) OrganizationID() *domain.OrganizationID {
 	return m.AppUserModel.OrganizationID
 }
 func (m *Owner) LoginID() string {

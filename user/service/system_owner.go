@@ -8,21 +8,13 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-var _ SystemOwnerModelInterface = (*SystemOwner)(nil)
+var _ SystemOwnerInterface = (*SystemOwner)(nil)
 
-// type SystemOwner interface {
-// 	// domain.SystemOwnerModel
-
-// 	GetOrganization(ctxc context.Context) (Organization, error)
-
-// 	FindAppUserByID(ctx context.Context, id domain.AppUserID) (AppUser, error)
-
-// 	FindAppUserByLoginID(ctx context.Context, loginID string) (AppUser, error)
-
-// 	// AddAppUser(ctx context.Context, param AppUserAddParameter) (domain.AppUserID, error)
-
-// 	AddFirstOwner(ctx context.Context, param FirstOwnerAddParameter) (domain.AppUserID, error)
-// }
+type SystemOwnerInterface interface {
+	OwnerModelInterface
+	IsSystemOwner() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type SystemOwner struct {
 	*domain.SystemOwnerModel
@@ -58,10 +50,10 @@ func NewSystemOwner(ctx context.Context, rf RepositoryFactory, systemOwnerModel 
 
 	return m, nil
 }
-func (m *SystemOwner) AppUserID() domain.AppUserID {
+func (m *SystemOwner) AppUserID() *domain.AppUserID {
 	return m.AppUserModel.AppUserID
 }
-func (m *SystemOwner) OrganizationID() domain.OrganizationID {
+func (m *SystemOwner) OrganizationID() *domain.OrganizationID {
 	return m.AppUserModel.OrganizationID
 }
 func (m *SystemOwner) LoginID() string {
@@ -77,7 +69,7 @@ func (m *SystemOwner) IsSystemOwner() bool {
 	return true
 }
 
-func (m *SystemOwner) GetOrganization(ctx context.Context) (Organization, error) {
+func (m *SystemOwner) GetOrganization(ctx context.Context) (*Organization, error) {
 	org, err := m.orgRepo.GetOrganization(ctx, m)
 	if err != nil {
 		return nil, liberrors.Errorf("m.orgRepo.GetOrganization. err: %w", err)
@@ -86,7 +78,7 @@ func (m *SystemOwner) GetOrganization(ctx context.Context) (Organization, error)
 	return org, nil
 }
 
-func (m *SystemOwner) FindAppUserByID(ctx context.Context, id domain.AppUserID) (*AppUser, error) {
+func (m *SystemOwner) FindAppUserByID(ctx context.Context, id *domain.AppUserID) (*AppUser, error) {
 	appUser, err := m.appUserRepo.FindAppUserByID(ctx, m, id)
 	if err != nil {
 		return nil, liberrors.Errorf("m.appUserRepo.FindAppUserByID. err: %w", err)
@@ -115,7 +107,7 @@ func (m *SystemOwner) FindAppUserByLoginID(ctx context.Context, loginID string) 
 // 	return appUserID, nil
 // }
 
-func (m *SystemOwner) AddFirstOwner(ctx context.Context, param FirstOwnerAddParameter) (domain.AppUserID, error) {
+func (m *SystemOwner) AddFirstOwner(ctx context.Context, param AppUserAddParameterInterface) (*domain.AppUserID, error) {
 	// rbacAppUser := NewRBACAppUser(m.GetOrganizationID(), m.GetAppUserID())
 	rbacAllUserRolesObject := NewRBACAllUserRolesObject(m.OrganizationID())
 

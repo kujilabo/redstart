@@ -10,6 +10,8 @@ packageConfigs:
     forbiddenPackages:
       - github.com/foo/bar/repository
       - "net/http"
+  "github.com/kujilabo/redstart/user/gateway":
+    forbiddenPackages:
   "main":
     forbiddenPackages:
       - "net/http"

@@ -64,13 +64,13 @@ func testDB(t *testing.T, fn func(t *testing.T, ctx context.Context, ts testServ
 	}
 }
 
-func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domain.OrganizationID, *service.SystemOwner, *service.Owner) {
+func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*domain.OrganizationID, *service.SystemOwner, *service.Owner) {
 	bg := context.Background()
 	orgName := RandString(orgNameLength)
 	sysAd, err := service.NewSystemAdmin(ctx, ts.rf)
 	require.NoError(t, err)
 
-	firstOwnerAddParam, err := service.NewFirstOwnerAddParameter("OWNER_ID", "OWNER_NAME", "OWNER_PASSWORD")
+	firstOwnerAddParam, err := service.NewAppUserAddParameter("OWNER_ID", "OWNER_NAME", "OWNER_PASSWORD")
 	require.NoError(t, err)
 	orgAddParam, err := service.NewOrganizationAddParameter(orgName, firstOwnerAddParam)
 	require.NoError(t, err)
@@ -127,13 +127,13 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (domai
 	err = authorizationManager.AddUserToGroup(ctx, sysOwner, ownerID, ownerGroupID)
 	require.NoError(t, err)
 
-	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.GetLoginID())
+	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.LoginID())
 	require.NoError(t, err)
 
 	return orgID, sysOwner, owner
 }
 
-func teardownOrganization(t *testing.T, ts testService, orgID domain.OrganizationID) {
+func teardownOrganization(t *testing.T, ts testService, orgID *domain.OrganizationID) {
 	// delete all organizations
 	// ts.db.Exec("delete from space where organization_id = ?", orgID.Int())
 	ts.db.Exec("delete from app_user where organization_id = ?", orgID.Int())
@@ -171,8 +171,8 @@ type testSystemAdmin struct {
 	*domain.SystemAdminModel
 }
 
-func (m *testSystemAdmin) AppUserID() domain.AppUserID {
-	return m.SystemAdminModel.AppUserID()
+func (m *testSystemAdmin) AppUserID() *domain.AppUserID {
+	return m.SystemAdminModel.AppUserID
 }
 func (m *testSystemAdmin) IsSystemAdmin() bool {
 	return true
@@ -187,10 +187,10 @@ type testAppUserModel struct {
 	*domain.AppUserModel
 }
 
-func (m *testAppUserModel) AppUserID() domain.AppUserID {
+func (m *testAppUserModel) AppUserID() *domain.AppUserID {
 	return m.AppUserModel.AppUserID
 }
-func (m *testAppUserModel) OrganizationID() domain.OrganizationID {
+func (m *testAppUserModel) OrganizationID() *domain.OrganizationID {
 	return m.AppUserModel.OrganizationID
 }
 func (m *testAppUserModel) LoginID() string {
@@ -231,7 +231,7 @@ func testNewUserGroups(userGroupModels []*domain.UserGroupModel) []*testUserGrou
 	return groups
 }
 
-func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) service.AppUserAddParameter {
+func testNewAppUserAddParameter(t *testing.T, loginID, username, password string) *service.AppUserAddParameter {
 	p, err := service.NewAppUserAddParameter(loginID, username, password)
 	require.NoError(t, err)
 	return p
@@ -243,7 +243,7 @@ func testNewUserGroupAddParameter(t *testing.T, key, name, description string) s
 	return p
 }
 
-func getOrganization(t *testing.T, ctx context.Context, ts testService, orgID domain.OrganizationID) service.Organization {
+func getOrganization(t *testing.T, ctx context.Context, ts testService, orgID *domain.OrganizationID) *service.Organization {
 	orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
 
 	baseModel, err := libdomain.NewBaseModel(1, time.Now(), time.Now(), 1, 1)
@@ -256,7 +256,7 @@ func getOrganization(t *testing.T, ctx context.Context, ts testService, orgID do
 
 	org, err := orgRepo.GetOrganization(ctx, appUser)
 	require.NoError(t, err)
-	require.Equal(t, orgNameLength, len(org.GetName()))
+	require.Equal(t, orgNameLength, len(org.Name()))
 
 	return org
 }

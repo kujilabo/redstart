@@ -10,82 +10,23 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-type AppUserModelInterface interface {
-	AppUserID() domain.AppUserID
-	OrganizationID() domain.OrganizationID
-	LoginID() string
-	Username() string
-	// GetUserGroups() []domain.UserGroupModel
-}
-type OwnerModelInterface interface {
-	AppUserModelInterface
-	IsOwner() bool
-	// GetUserGroups() []domain.UserGroupModel
-}
-type SystemOwnerModelInterface interface {
-	OwnerModelInterface
-	IsSystemOwner() bool
-	// GetUserGroups() []domain.UserGroupModel
-}
-type SystemAdminModelInterface interface {
-	AppUserID() domain.AppUserID
-	IsSystemAdmin() bool
-	// GetUserGroups() []domain.UserGroupModel
-}
-
 var ErrOrganizationNotFound = errors.New("organization not found")
 var ErrOrganizationAlreadyExists = errors.New("organization already exists")
 
-type FirstOwnerAddParameter interface {
-	GetLoginID() string
-	GetUsername() string
-	GetPassword() string
+type OrganizationAddParameterInterface interface {
+	Name() string
+	FirstOwner() AppUserAddParameterInterface
 }
 
-type firstOwnerAddParameter struct {
-	LoginID  string `validate:"required"`
-	Username string `validate:"required"`
-	Password string `validate:"required"`
+type OrganizationAddParameter struct {
+	Name_       string `validate:"required"`
+	FirstOwner_ AppUserAddParameterInterface
 }
 
-func NewFirstOwnerAddParameter(loginID, username, password string) (FirstOwnerAddParameter, error) {
-	m := &firstOwnerAddParameter{
-		LoginID:  loginID,
-		Username: username,
-		Password: password,
-	}
-
-	if err := libdomain.Validator.Struct(m); err != nil {
-		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
-	}
-
-	return m, nil
-}
-
-func (p *firstOwnerAddParameter) GetLoginID() string {
-	return p.LoginID
-}
-func (p *firstOwnerAddParameter) GetUsername() string {
-	return p.Username
-}
-func (p *firstOwnerAddParameter) GetPassword() string {
-	return p.Password
-}
-
-type OrganizationAddParameter interface {
-	GetName() string
-	GetFirstOwner() FirstOwnerAddParameter
-}
-
-type organizationAddParameter struct {
-	Name       string `validate:"required"`
-	FirstOwner FirstOwnerAddParameter
-}
-
-func NewOrganizationAddParameter(name string, firstOwner FirstOwnerAddParameter) (OrganizationAddParameter, error) {
-	m := &organizationAddParameter{
-		Name:       name,
-		FirstOwner: firstOwner,
+func NewOrganizationAddParameter(name string, firstOwner AppUserAddParameterInterface) (*OrganizationAddParameter, error) {
+	m := &OrganizationAddParameter{
+		Name_:       name,
+		FirstOwner_: firstOwner,
 	}
 	if err := libdomain.Validator.Struct(m); err != nil {
 		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
@@ -94,21 +35,21 @@ func NewOrganizationAddParameter(name string, firstOwner FirstOwnerAddParameter)
 	return m, nil
 }
 
-func (p *organizationAddParameter) GetName() string {
-	return p.Name
+func (p *OrganizationAddParameter) Name() string {
+	return p.Name_
 }
-func (p *organizationAddParameter) GetFirstOwner() FirstOwnerAddParameter {
-	return p.FirstOwner
+func (p *OrganizationAddParameter) FirstOwner() AppUserAddParameterInterface {
+	return p.FirstOwner_
 }
 
 type OrganizationRepository interface {
-	GetOrganization(ctx context.Context, operator AppUserModelInterface) (Organization, error)
+	GetOrganization(ctx context.Context, operator AppUserInterface) (*Organization, error)
 
-	FindOrganizationByName(ctx context.Context, operator SystemAdminModelInterface, name string) (Organization, error)
+	FindOrganizationByName(ctx context.Context, operator SystemAdminInterface, name string) (*Organization, error)
 
-	FindOrganizationByID(ctx context.Context, operator SystemAdminModelInterface, id domain.OrganizationID) (Organization, error)
+	FindOrganizationByID(ctx context.Context, operator SystemAdminInterface, id *domain.OrganizationID) (*Organization, error)
 
-	AddOrganization(ctx context.Context, operator SystemAdminModelInterface, param OrganizationAddParameter) (domain.OrganizationID, error)
+	AddOrganization(ctx context.Context, operator SystemAdminInterface, param OrganizationAddParameterInterface) (*domain.OrganizationID, error)
 
 	// FindOrganizationByName(ctx context.Context, operator SystemAdmin, name string) (Organization, error)
 	// FindOrganization(ctx context.Context, operator AppUser) (Organization, error)

@@ -16,4 +16,5 @@ golangci-lint run --disable-all --config ./.github/.golangci.yml \
 -E goimports \
 -E gofmt \
 -E errcheck \
--E gosec
+-E gosec && \
+pkgforbid -config=./.github/pkgforbid.yml ./...

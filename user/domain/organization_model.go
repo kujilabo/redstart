@@ -5,42 +5,42 @@ import (
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
-type OrganizationID interface {
-	Int() int
-	IsOrganizationID() bool
-}
+// type OrganizationID interface {
+// 	Int() int
+// 	IsOrganizationID() bool
+// }
 
-type organizationID struct {
+type OrganizationID struct {
 	Value int `validate:"required,gte=1"`
 }
 
-func NewOrganizationID(value int) (OrganizationID, error) {
-	return &organizationID{
+func NewOrganizationID(value int) (*OrganizationID, error) {
+	return &OrganizationID{
 		Value: value,
 	}, nil
 }
 
-func (v *organizationID) Int() int {
+func (v *OrganizationID) Int() int {
 	return v.Value
 }
-func (v *organizationID) IsOrganizationID() bool {
+func (v *OrganizationID) IsOrganizationID() bool {
 	return true
 }
 
-type OrganizationModel interface {
-	libdomain.BaseModel
-	GetID() OrganizationID
-	GetName() string
-}
+// type OrganizationModel interface {
+// 	libdomain.BaseModel
+// 	GetID() OrganizationID
+// 	GetName() string
+// }
 
-type organizationModel struct {
+type OrganizationModel struct {
 	libdomain.BaseModel
-	OrganizationID OrganizationID
+	OrganizationID *OrganizationID
 	Name           string `validate:"required"`
 }
 
-func NewOrganizationModel(basemodel libdomain.BaseModel, organizationID OrganizationID, name string) (OrganizationModel, error) {
-	m := &organizationModel{
+func NewOrganizationModel(basemodel libdomain.BaseModel, organizationID *OrganizationID, name string) (*OrganizationModel, error) {
+	m := &OrganizationModel{
 		BaseModel:      basemodel,
 		OrganizationID: organizationID,
 		Name:           name,
@@ -52,10 +52,10 @@ func NewOrganizationModel(basemodel libdomain.BaseModel, organizationID Organiza
 	return m, nil
 }
 
-func (m *organizationModel) GetID() OrganizationID {
-	return m.OrganizationID
-}
+// func (m *organizationModel) GetID() OrganizationID {
+// 	return m.OrganizationID
+// }
 
-func (m *organizationModel) GetName() string {
-	return m.Name
-}
+// func (m *organizationModel) GetName() string {
+// 	return m.Name
+// }

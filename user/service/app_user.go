@@ -8,9 +8,13 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-// type AppUser interface {
-// 	// domain.AppUserModel
-// }
+type AppUserInterface interface {
+	AppUserID() *domain.AppUserID
+	OrganizationID() *domain.OrganizationID
+	LoginID() string
+	Username() string
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type AppUser struct {
 	*domain.AppUserModel
@@ -35,10 +39,10 @@ func NewAppUser(ctx context.Context, rf RepositoryFactory, appUserModel *domain.
 	return m, nil
 }
 
-func (m *AppUser) AppUserID() domain.AppUserID {
+func (m *AppUser) AppUserID() *domain.AppUserID {
 	return m.AppUserModel.AppUserID
 }
-func (m *AppUser) OrganizationID() domain.OrganizationID {
+func (m *AppUser) OrganizationID() *domain.OrganizationID {
 	return m.AppUserModel.OrganizationID
 }
 func (m *AppUser) LoginID() string {

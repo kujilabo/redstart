@@ -6,25 +6,25 @@ import (
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
-type AppUserID interface {
-	Int() int
-	IsAppUserID() bool
-}
+// type AppUserID interface {
+// 	Int() int
+// 	IsAppUserID() bool
+// }
 
-type appUserID struct {
+type AppUserID struct {
 	Value int `validate:"required,gte=0"`
 }
 
-func NewAppUserID(value int) (AppUserID, error) {
-	return &appUserID{
+func NewAppUserID(value int) (*AppUserID, error) {
+	return &AppUserID{
 		Value: value,
 	}, nil
 }
 
-func (v *appUserID) Int() int {
+func (v *AppUserID) Int() int {
 	return v.Value
 }
-func (v *appUserID) IsAppUserID() bool {
+func (v *AppUserID) IsAppUserID() bool {
 	return true
 }
 
@@ -39,14 +39,14 @@ func (v *appUserID) IsAppUserID() bool {
 
 type AppUserModel struct {
 	libdomain.BaseModel
-	AppUserID      AppUserID
-	OrganizationID OrganizationID
+	AppUserID      *AppUserID
+	OrganizationID *OrganizationID
 	LoginID        string `validate:"required"`
 	Username       string `validate:"required"`
 	UserGroups     []*UserGroupModel
 }
 
-func NewAppUserModel(baseModel libdomain.BaseModel, appUserID AppUserID, organizationID OrganizationID, loginID, username string, userGroups []*UserGroupModel) (*AppUserModel, error) {
+func NewAppUserModel(baseModel libdomain.BaseModel, appUserID *AppUserID, organizationID *OrganizationID, loginID, username string, userGroups []*UserGroupModel) (*AppUserModel, error) {
 	m := &AppUserModel{
 		BaseModel:      baseModel,
 		AppUserID:      appUserID,

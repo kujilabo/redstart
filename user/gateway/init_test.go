@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	invalidOrgID     domain.OrganizationID
-	invalidAppUserID domain.AppUserID
+	invalidOrgID     *domain.OrganizationID
+	invalidAppUserID *domain.AppUserID
 )
 
 func init() {

@@ -26,7 +26,7 @@ func (m *authorizationManager) Init(ctx context.Context) error {
 	return rbacRepo.Init()
 }
 
-func (m *authorizationManager) AddUserToGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
+func (m *authorizationManager) AddUserToGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID, appUserID *domain.AppUserID, userGroupID *domain.UserGroupID) error {
 	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.db, m.rf)
 
 	if err := pairOfUserAndGroupRepo.AddPairOfUserAndGroupBySystemAdmin(ctx, operator, organizationID, appUserID, userGroupID); err != nil {
@@ -45,7 +45,7 @@ func (m *authorizationManager) AddUserToGroupBySystemAdmin(ctx context.Context, 
 
 	return nil
 }
-func (m *authorizationManager) AddUserToGroup(ctx context.Context, operator service.AppUserModelInterface, appUserID domain.AppUserID, userGroupID domain.UserGroupID) error {
+func (m *authorizationManager) AddUserToGroup(ctx context.Context, operator service.AppUserInterface, appUserID *domain.AppUserID, userGroupID *domain.UserGroupID) error {
 	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.db, m.rf)
 
 	if err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, operator, appUserID, userGroupID); err != nil {
@@ -67,7 +67,7 @@ func (m *authorizationManager) AddUserToGroup(ctx context.Context, operator serv
 	return nil
 }
 
-func (m *authorizationManager) AddPolicyToUser(ctx context.Context, operator service.AppUserModelInterface, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
+func (m *authorizationManager) AddPolicyToUser(ctx context.Context, operator service.AppUserInterface, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
 	rbacRepo := newRBACRepository(ctx, m.db)
 	rbacDomain := service.NewRBACOrganization(operator.OrganizationID())
 
@@ -78,7 +78,7 @@ func (m *authorizationManager) AddPolicyToUser(ctx context.Context, operator ser
 	return nil
 }
 
-func (m *authorizationManager) AddPolicyToUserBySystemAdmin(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
+func (m *authorizationManager) AddPolicyToUserBySystemAdmin(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
 	rbacRepo := newRBACRepository(ctx, m.db)
 	rbacDomain := service.NewRBACOrganization(organizationID)
 
@@ -89,7 +89,7 @@ func (m *authorizationManager) AddPolicyToUserBySystemAdmin(ctx context.Context,
 	return nil
 }
 
-func (m *authorizationManager) AddPolicyToGroup(ctx context.Context, operator service.AppUserModelInterface, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
+func (m *authorizationManager) AddPolicyToGroup(ctx context.Context, operator service.AppUserInterface, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
 	rbacRepo := newRBACRepository(ctx, m.db)
 	rbacDomain := service.NewRBACOrganization(operator.OrganizationID())
 
@@ -100,7 +100,7 @@ func (m *authorizationManager) AddPolicyToGroup(ctx context.Context, operator se
 	return nil
 }
 
-func (m *authorizationManager) AddPolicyToGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminModelInterface, organizationID domain.OrganizationID, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
+func (m *authorizationManager) AddPolicyToGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
 	rbacRepo := newRBACRepository(ctx, m.db)
 	rbacDomain := service.NewRBACOrganization(organizationID)
 
@@ -111,7 +111,7 @@ func (m *authorizationManager) AddPolicyToGroupBySystemAdmin(ctx context.Context
 	return nil
 }
 
-func (m *authorizationManager) Authorize(ctx context.Context, operator service.AppUserModelInterface, rbacAction domain.RBACAction, rbacObject domain.RBACObject) (bool, error) {
+func (m *authorizationManager) Authorize(ctx context.Context, operator service.AppUserInterface, rbacAction domain.RBACAction, rbacObject domain.RBACObject) (bool, error) {
 	rbacDomain := service.NewRBACOrganization(operator.OrganizationID())
 
 	userGroupRepo := m.rf.NewUserGroupRepository(ctx)

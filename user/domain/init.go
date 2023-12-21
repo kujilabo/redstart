@@ -1,6 +1,6 @@
 package domain
 
-var SystemAdminID AppUserID
+var SystemAdminID *AppUserID
 
 func init() {
 	systemAdminID := 1
