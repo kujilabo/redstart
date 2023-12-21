@@ -57,7 +57,7 @@ func NewOrganizationRepository(ctx context.Context, db *gorm.DB) service.Organiz
 	}
 }
 
-func (r *organizationRepository) GetOrganization(ctx context.Context, operator service.AppUserModelInterface) (*service.Organization, error) {
+func (r *organizationRepository) GetOrganization(ctx context.Context, operator service.AppUserInterface) (*service.Organization, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.GetOrganization")
 	defer span.End()
 
@@ -75,7 +75,7 @@ func (r *organizationRepository) GetOrganization(ctx context.Context, operator s
 	return organization.toModel()
 }
 
-func (r *organizationRepository) FindOrganizationByName(ctx context.Context, operator service.SystemAdminModelInterface, name string) (*service.Organization, error) {
+func (r *organizationRepository) FindOrganizationByName(ctx context.Context, operator service.SystemAdminInterface, name string) (*service.Organization, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.FindOrganizationByName")
 	defer span.End()
 
@@ -93,7 +93,7 @@ func (r *organizationRepository) FindOrganizationByName(ctx context.Context, ope
 	return organization.toModel()
 }
 
-func (r *organizationRepository) FindOrganizationByID(ctx context.Context, operator service.SystemAdminModelInterface, id *domain.OrganizationID) (*service.Organization, error) {
+func (r *organizationRepository) FindOrganizationByID(ctx context.Context, operator service.SystemAdminInterface, id *domain.OrganizationID) (*service.Organization, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.FindOrganizationByID")
 	defer span.End()
 
@@ -111,7 +111,7 @@ func (r *organizationRepository) FindOrganizationByID(ctx context.Context, opera
 	return organization.toModel()
 }
 
-func (r *organizationRepository) AddOrganization(ctx context.Context, operator service.SystemAdminModelInterface, param service.OrganizationAddParameterInterface) (*domain.OrganizationID, error) {
+func (r *organizationRepository) AddOrganization(ctx context.Context, operator service.SystemAdminInterface, param service.OrganizationAddParameterInterface) (*domain.OrganizationID, error) {
 	_, span := tracer.Start(ctx, "organizationRepository.AddOrganization")
 	defer span.End()
 

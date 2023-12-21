@@ -8,9 +8,13 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-// type AppUser interface {
-// 	// domain.AppUserModel
-// }
+type AppUserInterface interface {
+	AppUserID() *domain.AppUserID
+	OrganizationID() *domain.OrganizationID
+	LoginID() string
+	Username() string
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type AppUser struct {
 	*domain.AppUserModel

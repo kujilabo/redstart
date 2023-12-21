@@ -138,7 +138,7 @@ func NewAppUserRepository(ctx context.Context, driverName string, db *gorm.DB, r
 	}
 }
 
-func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context, operator service.SystemAdminModelInterface, organizationID *domain.OrganizationID) (*service.SystemOwner, error) {
+func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID) (*service.SystemOwner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindSystemOwnerByOrganizationID")
 	defer span.End()
 
@@ -155,7 +155,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context,
 	return appUser.toSystemOwner(ctx, r.rf, nil)
 }
 
-func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Context, operator service.SystemAdminModelInterface, organizationName string, options ...service.Option) (*service.SystemOwner, error) {
+func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Context, operator service.SystemAdminInterface, organizationName string, options ...service.Option) (*service.SystemOwner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindSystemOwnerByOrganizationName")
 	defer span.End()
 
@@ -193,7 +193,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 	return appUserE.toSystemOwner(ctx, r.rf, userGroups)
 }
 
-func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator service.AppUserModelInterface, id *domain.AppUserID, options ...service.Option) (*service.AppUser, error) {
+func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator service.AppUserInterface, id *domain.AppUserID, options ...service.Option) (*service.AppUser, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByID")
 	defer span.End()
 
@@ -230,7 +230,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 	return appUserE.toAppUser(ctx, r.rf, userGroups)
 }
 
-func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator service.AppUserModelInterface, loginID string) (*service.AppUser, error) {
+func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator service.AppUserInterface, loginID string) (*service.AppUser, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByLoginID")
 	defer span.End()
 
@@ -248,7 +248,7 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator s
 	return appUser.toAppUser(ctx, r.rf, nil)
 }
 
-func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator service.SystemOwnerModelInterface, loginID string) (*service.Owner, error) {
+func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator service.SystemOwnerInterface, loginID string) (*service.Owner, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.FindOwnerByLoginID")
 	defer span.End()
 
@@ -322,7 +322,7 @@ func (r *appUserRepository) AddAppUser(ctx context.Context, operator service.Own
 	return appUserID, nil
 }
 
-func (r *appUserRepository) AddSystemOwner(ctx context.Context, operator service.SystemAdminModelInterface, organizationID *domain.OrganizationID) (*domain.AppUserID, error) {
+func (r *appUserRepository) AddSystemOwner(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID) (*domain.AppUserID, error) {
 	_, span := tracer.Start(ctx, "appUserRepository.AddSystemOwner")
 	defer span.End()
 

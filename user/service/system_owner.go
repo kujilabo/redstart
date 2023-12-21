@@ -8,21 +8,13 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-var _ SystemOwnerModelInterface = (*SystemOwner)(nil)
+var _ SystemOwnerInterface = (*SystemOwner)(nil)
 
-// type SystemOwner interface {
-// 	// domain.SystemOwnerModel
-
-// 	GetOrganization(ctxc context.Context) (Organization, error)
-
-// 	FindAppUserByID(ctx context.Context, id domain.AppUserID) (AppUser, error)
-
-// 	FindAppUserByLoginID(ctx context.Context, loginID string) (AppUser, error)
-
-// 	// AddAppUser(ctx context.Context, param AppUserAddParameter) (domain.AppUserID, error)
-
-// 	AddFirstOwner(ctx context.Context, param FirstOwnerAddParameter) (domain.AppUserID, error)
-// }
+type SystemOwnerInterface interface {
+	OwnerModelInterface
+	IsSystemOwner() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type SystemOwner struct {
 	*domain.SystemOwnerModel

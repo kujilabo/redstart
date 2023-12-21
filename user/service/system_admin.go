@@ -9,19 +9,13 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-var _ SystemAdminModelInterface = (*SystemAdmin)(nil)
+var _ SystemAdminInterface = (*SystemAdmin)(nil)
 
-// type SystemAdminInterface interface {
-// 	domain.SystemAdminModel
-
-// 	FindSystemOwnerByOrganizationID(ctx context.Context, organizationID domain.OrganizationID) (SystemOwner, error)
-
-// 	FindSystemOwnerByOrganizationName(ctx context.Context, organizationName string) (SystemOwner, error)
-
-// 	FindOrganizationByName(ctx context.Context, name string) (Organization, error)
-
-// 	AddOrganization(ctx context.Context, parma OrganizationAddParameter) (domain.OrganizationID, error)
-// }
+type SystemAdminInterface interface {
+	AppUserID() *domain.AppUserID
+	IsSystemAdmin() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type SystemAdmin struct {
 	*domain.SystemAdminModel
@@ -40,8 +34,6 @@ func NewSystemAdmin(ctx context.Context, rf RepositoryFactory) (*SystemAdmin, er
 		orgRepo:          orgRepo,
 		appUserRepo:      appUserRepo,
 	}
-
-	var _ SystemAdminModelInterface = m
 
 	return m, nil
 }

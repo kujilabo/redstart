@@ -67,19 +67,19 @@ type Option string
 var IncludeGroups Option = "IncludeGroups"
 
 type AppUserRepository interface {
-	FindSystemOwnerByOrganizationID(ctx context.Context, operator SystemAdminModelInterface, organizationID *domain.OrganizationID) (*SystemOwner, error)
+	FindSystemOwnerByOrganizationID(ctx context.Context, operator SystemAdminInterface, organizationID *domain.OrganizationID) (*SystemOwner, error)
 
-	FindSystemOwnerByOrganizationName(ctx context.Context, operator SystemAdminModelInterface, organizationName string, options ...Option) (*SystemOwner, error)
+	FindSystemOwnerByOrganizationName(ctx context.Context, operator SystemAdminInterface, organizationName string, options ...Option) (*SystemOwner, error)
 
-	FindAppUserByID(ctx context.Context, operator AppUserModelInterface, id *domain.AppUserID, options ...Option) (*AppUser, error)
+	FindAppUserByID(ctx context.Context, operator AppUserInterface, id *domain.AppUserID, options ...Option) (*AppUser, error)
 
-	FindAppUserByLoginID(ctx context.Context, operator AppUserModelInterface, loginID string) (*AppUser, error)
+	FindAppUserByLoginID(ctx context.Context, operator AppUserInterface, loginID string) (*AppUser, error)
 
-	FindOwnerByLoginID(ctx context.Context, operator SystemOwnerModelInterface, loginID string) (*Owner, error)
+	FindOwnerByLoginID(ctx context.Context, operator SystemOwnerInterface, loginID string) (*Owner, error)
 
 	AddAppUser(ctx context.Context, operator OwnerModelInterface, param AppUserAddParameterInterface) (*domain.AppUserID, error)
 
-	AddSystemOwner(ctx context.Context, operator SystemAdminModelInterface, organizationID *domain.OrganizationID) (*domain.AppUserID, error)
+	AddSystemOwner(ctx context.Context, operator SystemAdminInterface, organizationID *domain.OrganizationID) (*domain.AppUserID, error)
 
 	// AddFirstOwner(ctx context.Context, operator domain.SystemOwnerModel, param FirstOwnerAddParameter) (domain.AppUserID, error)
 

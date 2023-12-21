@@ -7,10 +7,11 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-// type Owner interface {
-// 	// domain.OwnerModel
-// 	AddAppUser(ctx context.Context, param AppUserAddParameter) (domain.AppUserID, error)
-// }
+type OwnerModelInterface interface {
+	AppUserInterface
+	IsOwner() bool
+	// GetUserGroups() []domain.UserGroupModel
+}
 
 type Owner struct {
 	rf RepositoryFactory
