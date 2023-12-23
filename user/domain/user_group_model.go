@@ -5,11 +5,6 @@ import (
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
-// type UserGroupID interface {
-// 	Int() int
-// 	IsUserGroupID() bool
-// }
-
 type UserGroupID struct {
 	Value int
 }
@@ -27,18 +22,8 @@ func (v *UserGroupID) IsUserGroupID() bool {
 	return true
 }
 
-// type UserGroupModel interface {
-// 	libdomain.BaseModel
-// 	GetUserGroupID() UserGroupID
-// 	GetOrganizationID() OrganizationID
-// 	GetKey() string
-// 	GetName() string
-// 	GetDescription() string
-// 	IsSystemGroup() bool
-// }
-
 type UserGroupModel struct {
-	libdomain.BaseModel
+	*libdomain.BaseModel
 	UserGroupID    *UserGroupID
 	OrganizationID *OrganizationID
 	Key            string `validate:"required"`
@@ -47,7 +32,7 @@ type UserGroupModel struct {
 }
 
 // NewUserGroupModel returns a new UserGroupModel
-func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID *UserGroupID, organizationID *OrganizationID, key, name, description string) (*UserGroupModel, error) {
+func NewUserGroupModel(baseModel *libdomain.BaseModel, userGroupID *UserGroupID, organizationID *OrganizationID, key, name, description string) (*UserGroupModel, error) {
 	m := &UserGroupModel{
 		BaseModel:      baseModel,
 		UserGroupID:    userGroupID,
@@ -63,27 +48,3 @@ func NewUserGroupModel(baseModel libdomain.BaseModel, userGroupID *UserGroupID, 
 
 	return m, nil
 }
-
-// func (m *userGroupModel) GetUserGroupID() UserGroupID {
-// 	return m.UserGroupID
-// }
-
-// func (m *userGroupModel) GetOrganizationID() OrganizationID {
-// 	return m.OrganizationID
-// }
-
-// func (m *userGroupModel) GetKey() string {
-// 	return m.Key
-// }
-
-// func (m *userGroupModel) GetName() string {
-// 	return m.Name
-// }
-
-// func (m *userGroupModel) GetDescription() string {
-// 	return m.Description
-// }
-
-// func (m *userGroupModel) IsSystemGroup() bool {
-// 	return strings.HasPrefix(m.Key, "__")
-// }

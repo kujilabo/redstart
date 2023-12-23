@@ -18,25 +18,19 @@ type AppUserAddParameterInterface interface {
 	LoginID() string
 	Username() string
 	Password() string
-	// GetRoles() []string
-	// GetDetails() string
 }
 
 type AppUserAddParameter struct {
-	LoginID_  string
-	Username_ string
-	Password_ string
-	// Roles    []string
-	// Details  string
+	LoginIDInternal  string
+	UsernameInternal string
+	PasswordInternal string
 }
 
 func NewAppUserAddParameter(loginID, username, password string) (*AppUserAddParameter, error) {
 	m := &AppUserAddParameter{
-		LoginID_:  loginID,
-		Username_: username,
-		Password_: password,
-		// Roles:    roles,
-		// Details:  details,
+		LoginIDInternal:  loginID,
+		UsernameInternal: username,
+		PasswordInternal: password,
 	}
 	if err := libdomain.Validator.Struct(m); err != nil {
 		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
@@ -46,21 +40,14 @@ func NewAppUserAddParameter(loginID, username, password string) (*AppUserAddPara
 }
 
 func (p *AppUserAddParameter) LoginID() string {
-	return p.LoginID_
+	return p.LoginIDInternal
 }
 func (p *AppUserAddParameter) Username() string {
-	return p.Username_
+	return p.UsernameInternal
 }
 func (p *AppUserAddParameter) Password() string {
-	return p.Password_
+	return p.PasswordInternal
 }
-
-// func (p *appUserAddParameter) GetRoles() []string {
-// 	return p.Roles
-// }
-// func (p *appUserAddParameter) GetDetails() string {
-// 	return p.Details
-// }
 
 type Option string
 

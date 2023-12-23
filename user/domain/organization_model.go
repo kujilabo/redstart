@@ -5,11 +5,6 @@ import (
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 )
 
-// type OrganizationID interface {
-// 	Int() int
-// 	IsOrganizationID() bool
-// }
-
 type OrganizationID struct {
 	Value int `validate:"required,gte=1"`
 }
@@ -27,19 +22,13 @@ func (v *OrganizationID) IsOrganizationID() bool {
 	return true
 }
 
-// type OrganizationModel interface {
-// 	libdomain.BaseModel
-// 	GetID() OrganizationID
-// 	GetName() string
-// }
-
 type OrganizationModel struct {
-	libdomain.BaseModel
+	*libdomain.BaseModel
 	OrganizationID *OrganizationID
 	Name           string `validate:"required"`
 }
 
-func NewOrganizationModel(basemodel libdomain.BaseModel, organizationID *OrganizationID, name string) (*OrganizationModel, error) {
+func NewOrganizationModel(basemodel *libdomain.BaseModel, organizationID *OrganizationID, name string) (*OrganizationModel, error) {
 	m := &OrganizationModel{
 		BaseModel:      basemodel,
 		OrganizationID: organizationID,
@@ -51,11 +40,3 @@ func NewOrganizationModel(basemodel libdomain.BaseModel, organizationID *Organiz
 
 	return m, nil
 }
-
-// func (m *organizationModel) GetID() OrganizationID {
-// 	return m.OrganizationID
-// }
-
-// func (m *organizationModel) GetName() string {
-// 	return m.Name
-// }
