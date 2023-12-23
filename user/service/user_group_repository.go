@@ -8,23 +8,23 @@ import (
 	"github.com/kujilabo/redstart/user/domain"
 )
 
-type UserGroupAddParameter interface {
-	GetKey() string
-	GetName() string
-	GetDescription() string
+type UserGroupAddParameterInterface interface {
+	Key() string
+	Name() string
+	Description() string
 }
 
-type userGroupAddParameter struct {
-	Key         string
-	Name        string
-	Description string
+type UserGroupAddParameter struct {
+	KeyInternal         string
+	NameInternal        string
+	DescriptionInternal string
 }
 
-func NewUserGroupAddParameter(key, name, description string) (UserGroupAddParameter, error) {
-	m := &userGroupAddParameter{
-		Key:         key,
-		Name:        name,
-		Description: description,
+func NewUserGroupAddParameter(key, name, description string) (*UserGroupAddParameter, error) {
+	m := &UserGroupAddParameter{
+		KeyInternal:         key,
+		NameInternal:        name,
+		DescriptionInternal: description,
 	}
 	if err := libdomain.Validator.Struct(m); err != nil {
 		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
@@ -33,14 +33,14 @@ func NewUserGroupAddParameter(key, name, description string) (UserGroupAddParame
 	return m, nil
 }
 
-func (p *userGroupAddParameter) GetKey() string {
-	return p.Key
+func (p *UserGroupAddParameter) Key() string {
+	return p.KeyInternal
 }
-func (p *userGroupAddParameter) GetName() string {
-	return p.Name
+func (p *UserGroupAddParameter) Name() string {
+	return p.NameInternal
 }
-func (p *userGroupAddParameter) GetDescription() string {
-	return p.Description
+func (p *UserGroupAddParameter) Description() string {
+	return p.DescriptionInternal
 }
 
 type UserGroupRepository interface {
@@ -54,5 +54,5 @@ type UserGroupRepository interface {
 
 	AddSystemOwnerGroup(ctx context.Context, operator SystemAdminInterface, organizationID *domain.OrganizationID) (*domain.UserGroupID, error)
 
-	AddUserGroup(ctx context.Context, operator OwnerModelInterface, parameter UserGroupAddParameter) (*domain.UserGroupID, error)
+	AddUserGroup(ctx context.Context, operator OwnerModelInterface, parameter UserGroupAddParameterInterface) (*domain.UserGroupID, error)
 }

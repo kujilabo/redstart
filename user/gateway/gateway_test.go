@@ -237,7 +237,7 @@ func testNewAppUserAddParameter(t *testing.T, loginID, username, password string
 	return p
 }
 
-func testNewUserGroupAddParameter(t *testing.T, key, name, description string) service.UserGroupAddParameter {
+func testNewUserGroupAddParameter(t *testing.T, key, name, description string) *service.UserGroupAddParameter {
 	p, err := service.NewUserGroupAddParameter(key, name, description)
 	require.NoError(t, err)
 	return p

@@ -192,7 +192,7 @@ func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator servic
 	return userGroupID, nil
 }
 
-func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service.OwnerModelInterface, parameter service.UserGroupAddParameter) (*domain.UserGroupID, error) {
+func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service.OwnerModelInterface, parameter service.UserGroupAddParameterInterface) (*domain.UserGroupID, error) {
 	_, span := tracer.Start(ctx, "userGroupRepository.AddUserGroup")
 	defer span.End()
 
@@ -203,9 +203,9 @@ func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service
 			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: operator.OrganizationID().Int(),
-		Key:            parameter.GetKey(),
-		Name:           parameter.GetName(),
-		Description:    parameter.GetDescription(),
+		Key:            parameter.Key(),
+		Name:           parameter.Name(),
+		Description:    parameter.Description(),
 	}
 	if result := r.db.Create(&userGroup); result.Error != nil {
 		return nil, liberrors.Errorf(". err: %w", libgateway.ConvertDuplicatedError(result.Error, service.ErrAppUserAlreadyExists))
