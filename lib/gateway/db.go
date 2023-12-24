@@ -9,7 +9,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/mattn/go-sqlite3"
+
+	// "github.com/mattn/go-sqlite3"
 	"gorm.io/gorm"
 
 	liberrors "github.com/kujilabo/redstart/lib/errors"
@@ -27,14 +28,14 @@ func ConvertDuplicatedError(err error, newErr error) error {
 		return newErr
 	}
 
-	var sqlite3Err sqlite3.Error
-	if ok := errors.As(err, &sqlite3Err); ok {
-		if int(sqlite3Err.ExtendedCode) == SQLITE_CONSTRAINT_PRIMARYKEY {
-			return newErr
-		} else if int(sqlite3Err.ExtendedCode) == SQLITE_CONSTRAINT_UNIQUE {
-			return newErr
-		}
-	}
+	// var sqlite3Err sqlite3.Error
+	// if ok := errors.As(err, &sqlite3Err); ok {
+	// 	if int(sqlite3Err.ExtendedCode) == SQLITE_CONSTRAINT_PRIMARYKEY {
+	// 		return newErr
+	// 	} else if int(sqlite3Err.ExtendedCode) == SQLITE_CONSTRAINT_UNIQUE {
+	// 		return newErr
+	// 	}
+	// }
 
 	return err
 }
