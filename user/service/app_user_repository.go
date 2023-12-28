@@ -18,19 +18,31 @@ type AppUserAddParameterInterface interface {
 	LoginID() string
 	Username() string
 	Password() string
+	Provider() string
+	ProviderLoginID() string
+	ProviderAuthToken() string
+	ProviderRefreshToken() string
 }
 
 type AppUserAddParameter struct {
-	LoginIDInternal  string
-	UsernameInternal string
-	PasswordInternal string
+	LoginIDInternal              string
+	UsernameInternal             string
+	PasswordInternal             string
+	ProviderInternal             string
+	ProviderLoginIDInternal      string
+	ProviderAuthTokenInternal    string
+	providerRefreshTokenInternal string
 }
 
-func NewAppUserAddParameter(loginID, username, password string) (*AppUserAddParameter, error) {
+func NewAppUserAddParameter(loginID, username, password, provider, providerLoginID, providerAuthToken, providerRefreshToken string) (*AppUserAddParameter, error) {
 	m := &AppUserAddParameter{
-		LoginIDInternal:  loginID,
-		UsernameInternal: username,
-		PasswordInternal: password,
+		LoginIDInternal:              loginID,
+		UsernameInternal:             username,
+		PasswordInternal:             password,
+		ProviderInternal:             provider,
+		ProviderLoginIDInternal:      providerLoginID,
+		ProviderAuthTokenInternal:    providerAuthToken,
+		providerRefreshTokenInternal: providerRefreshToken,
 	}
 	if err := libdomain.Validator.Struct(m); err != nil {
 		return nil, liberrors.Errorf("libdomain.Validator.Struct. err: %w", err)
@@ -47,6 +59,18 @@ func (p *AppUserAddParameter) Username() string {
 }
 func (p *AppUserAddParameter) Password() string {
 	return p.PasswordInternal
+}
+func (p *AppUserAddParameter) Provider() string {
+	return p.ProviderInternal
+}
+func (p *AppUserAddParameter) ProviderLoginID() string {
+	return p.ProviderLoginIDInternal
+}
+func (p *AppUserAddParameter) ProviderAuthToken() string {
+	return p.ProviderAuthTokenInternal
+}
+func (p *AppUserAddParameter) ProviderRefreshToken() string {
+	return p.providerRefreshTokenInternal
 }
 
 type Option string

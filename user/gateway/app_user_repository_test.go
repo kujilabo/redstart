@@ -68,7 +68,7 @@ func Test_appUserRepository_FindAppUserByID(t *testing.T) {
 		orgID, _, owner := setupOrganization(ctx, t, ts)
 		defer teardownOrganization(t, ts, orgID)
 
-		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD")
+		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
 		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
@@ -98,7 +98,7 @@ func Test_appUserRepository_FindAppUserByLoginID(t *testing.T) {
 		orgID, _, owner := setupOrganization(ctx, t, ts)
 		defer teardownOrganization(t, ts, orgID)
 
-		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD")
+		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
 		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
@@ -128,7 +128,7 @@ func Test_appUserRepository_FindOwnerByLoginID(t *testing.T) {
 		orgID, sysOwner, owner := setupOrganization(ctx, t, ts)
 		defer teardownOrganization(t, ts, orgID)
 
-		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD")
+		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
 		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)

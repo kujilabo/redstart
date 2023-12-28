@@ -5,6 +5,7 @@ import (
 
 	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
+	liblog "github.com/kujilabo/redstart/lib/log"
 	"github.com/kujilabo/redstart/user/domain"
 )
 
@@ -96,17 +97,6 @@ func (m *SystemOwner) FindAppUserByLoginID(ctx context.Context, loginID string) 
 	return appUser, nil
 }
 
-// func (m *systemOwner) AddAppUser(ctx context.Context, param AppUserAddParameter) (domain.AppUserID, error) {
-// 	logger := liblog.GetLoggerFromContext(ctx, UserServiceContextKey)
-// 	logger.InfoContext(ctx, "AddStudent")
-// 	appUserID, err := m.appUserRepo.AddAppUser(ctx, m, param)
-// 	if err != nil {
-// 		return nil, liberrors.Errorf("m.appUserRepo.AddAppUser. err: %w", err)
-// 	}
-
-// 	return appUserID, nil
-// }
-
 func (m *SystemOwner) AddFirstOwner(ctx context.Context, param AppUserAddParameterInterface) (*domain.AppUserID, error) {
 	// rbacAppUser := NewRBACAppUser(m.GetOrganizationID(), m.GetAppUserID())
 	rbacAllUserRolesObject := NewRBACAllUserRolesObject(m.OrganizationID())
@@ -154,4 +144,15 @@ func (m *SystemOwner) AddFirstOwner(ctx context.Context, param AppUserAddParamet
 	// }
 
 	return firstOwnerID, nil
+}
+
+func (m *SystemOwner) AddAppUser(ctx context.Context, param AppUserAddParameterInterface) (*domain.AppUserID, error) {
+	logger := liblog.GetLoggerFromContext(ctx, UserServiceContextKey)
+	logger.InfoContext(ctx, "AddStudent")
+	appUserID, err := m.appUserRepo.AddAppUser(ctx, m, param)
+	if err != nil {
+		return nil, liberrors.Errorf("m.appUserRepo.AddAppUser. err: %w", err)
+	}
+
+	return appUserID, nil
 }
