@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 	liblog "github.com/kujilabo/redstart/lib/log"
 	"github.com/kujilabo/redstart/user/domain"
@@ -25,6 +26,9 @@ type SystemAdmin struct {
 }
 
 func NewSystemAdmin(ctx context.Context, rf RepositoryFactory) (*SystemAdmin, error) {
+	if rf == nil {
+		return nil, fmt.Errorf("argument 'rf' is nil. err: %w", libdomain.ErrInvalidArgument)
+	}
 	orgRepo := rf.NewOrganizationRepository(ctx)
 	appUserRepo := rf.NewAppUserRepository(ctx)
 

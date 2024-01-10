@@ -29,6 +29,7 @@ type DBConfig struct {
 	DriverName string         `yaml:"driverName"`
 	SQLite3    *SQLite3Config `yaml:"sqlite3"`
 	MySQL      *MySQLConfig   `yaml:"mysql"`
+	Migration  bool           `yaml:"migration"`
 }
 
 func InitDB(cfg *DBConfig, sqlFS embed.FS) (*gorm.DB, *sql.DB, error) {
@@ -51,8 +52,10 @@ func InitDB(cfg *DBConfig, sqlFS embed.FS) (*gorm.DB, *sql.DB, error) {
 			return nil, nil, err
 		}
 
-		if err := libgateway.MigrateSQLiteDB(db, sqlFS); err != nil {
-			return nil, nil, err
+		if cfg.Migration {
+			if err := libgateway.MigrateSQLiteDB(db, sqlFS); err != nil {
+				return nil, nil, err
+			}
 		}
 
 		return db, sqlDB, nil
