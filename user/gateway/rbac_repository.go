@@ -33,7 +33,8 @@ m = g(r.sub, p.sub, r.dom) && (keyMatch(r.obj, p.obj) || g2(r.obj, p.obj, r.dom)
 `
 
 type rbacRepository struct {
-	db *gorm.DB
+	DB   *gorm.DB
+	Conf string
 }
 
 func newRBACRepository(ctx context.Context, db *gorm.DB) service.RBACRepository {
@@ -42,17 +43,18 @@ func newRBACRepository(ctx context.Context, db *gorm.DB) service.RBACRepository 
 	}
 
 	return &rbacRepository{
-		db: db,
+		DB:   db,
+		Conf: conf,
 	}
 }
 
 func (r *rbacRepository) Init() error {
-	a, err := gormadapter.NewAdapterByDB(r.db)
+	a, err := gormadapter.NewAdapterByDB(r.DB)
 	if err != nil {
 		return liberrors.Errorf("gormadapter.NewAdapterByDB. err: %w", err)
 	}
 
-	m, err := model.NewModelFromString(conf)
+	m, err := model.NewModelFromString(r.Conf)
 	if err != nil {
 		return liberrors.Errorf("model.NewModelFromString. err: %w", err)
 	}
@@ -65,12 +67,12 @@ func (r *rbacRepository) Init() error {
 }
 
 func (r *rbacRepository) initEnforcer() (*casbin.Enforcer, error) {
-	a, err := gormadapter.NewAdapterByDB(r.db)
+	a, err := gormadapter.NewAdapterByDB(r.DB)
 	if err != nil {
 		return nil, liberrors.Errorf("gormadapter.NewAdapterByDB. err: %w", err)
 	}
 
-	m, err := model.NewModelFromString(conf)
+	m, err := model.NewModelFromString(r.Conf)
 	if err != nil {
 		return nil, liberrors.Errorf("model.NewModelFromString. err: %w", err)
 	}
