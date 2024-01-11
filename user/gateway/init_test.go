@@ -33,6 +33,9 @@ func init() {
 		func() (*gorm.DB, error) {
 			return testlibgateway.InitMySQL(sqls.SQL, "127.0.0.1", 3307)
 		},
+		func() (*gorm.DB, error) {
+			return testlibgateway.InitPostgres(sqls.SQL, "127.0.0.1", 5433)
+		},
 		// func() (*gorm.DB, error) {
 		// 	return testlibgateway.InitSQLiteInFile(sqls.SQL)
 		// },
