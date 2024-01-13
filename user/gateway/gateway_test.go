@@ -3,8 +3,6 @@ package gateway_test
 import (
 	"context"
 	"crypto/rand"
-	"fmt"
-	"log/slog"
 	"math/big"
 	"testing"
 	"time"
@@ -133,8 +131,8 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	owner, err := appUserRepo.FindOwnerByLoginID(ctx, sysOwner, firstOwnerAddParam.LoginID())
 	require.NoError(t, err)
 
-	logger := slog.Default()
-	logger.Warn(fmt.Sprintf("orgID: %d", orgID.Int()))
+	// logger := slog.Default()
+	// logger.Warn(fmt.Sprintf("orgID: %d", orgID.Int()))
 
 	return orgID, sysOwner, owner
 }

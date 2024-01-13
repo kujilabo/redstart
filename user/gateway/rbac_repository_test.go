@@ -58,9 +58,9 @@ func initEnforcer(t *testing.T, db *gorm.DB, conf string) *casbin.Enforcer {
 	return e
 }
 
-func addPolicy(t *testing.T, rbacRepository service.RBACRepository, dom, sub, act, obj string) {
+func addPolicy(t *testing.T, ctx context.Context, rbacRepository service.RBACRepository, dom, sub, act, obj string) {
 	t.Helper()
-	err := rbacRepository.AddPolicy(domain.NewRBACDomain(dom), domain.NewRBACUser(sub), domain.NewRBACAction(act), domain.NewRBACObject(obj), service.RBACAllowEffect)
+	err := rbacRepository.AddPolicy(ctx, domain.NewRBACDomain(dom), domain.NewRBACUser(sub), domain.NewRBACAction(act), domain.NewRBACObject(obj), service.RBACAllowEffect)
 	require.NoError(t, err)
 }
 
@@ -76,7 +76,7 @@ func TestA(t *testing.T) {
 
 		err := initRBACRepository(t, ts.db, gateway.Conf)
 		require.NoError(t, err)
-		addPolicy(t, &rbacRepo, "domain1", "alice", "read", "domain:1_data:1")
+		addPolicy(t, ctx, &rbacRepo, "domain1", "alice", "read", "domain:1_data:1")
 		// rbacRepo.AddPolicy(domain.NewRBACDomain("domain1"), domain.NewRBACUser("alice"), domain.NewRBACAction("write"), domain.NewRBACObject("data1"), service.RBACAllowEffect)
 
 		// const policy = `

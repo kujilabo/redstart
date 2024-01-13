@@ -66,7 +66,8 @@ func (r *rbacRepository) Init() error {
 	return nil
 }
 
-func (r *rbacRepository) initEnforcer() (*casbin.Enforcer, error) {
+func (r *rbacRepository) initEnforcer(ctx context.Context) (*casbin.Enforcer, error) {
+	// logger := log.GetLoggerFromContext(ctx, UserGatewayContextKey)
 	a, err := gormadapter.NewAdapterByDB(r.DB)
 	if err != nil {
 		return nil, liberrors.Errorf("gormadapter.NewAdapterByDB. err: %w", err)
@@ -96,8 +97,8 @@ func (r *rbacRepository) initEnforcer() (*casbin.Enforcer, error) {
 // g2, domain:1_data_child, domain:1_data_parent, domain1
 // g2, domain:2_data_child, domain:2_data_parent, domain2
 
-func (r *rbacRepository) AddPolicy(domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) AddPolicy(ctx context.Context, domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -109,8 +110,8 @@ func (r *rbacRepository) AddPolicy(domain domain.RBACDomain, subject domain.RBAC
 	return nil
 }
 
-func (r *rbacRepository) RemovePolicy(domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) RemovePolicy(ctx context.Context, domain domain.RBACDomain, subject domain.RBACSubject, action domain.RBACAction, object domain.RBACObject, effect domain.RBACEffect) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -122,8 +123,8 @@ func (r *rbacRepository) RemovePolicy(domain domain.RBACDomain, subject domain.R
 	return nil
 }
 
-func (r *rbacRepository) RemoveSubjectPolicy(domain domain.RBACDomain, subject domain.RBACSubject) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) RemoveSubjectPolicy(ctx context.Context, domain domain.RBACDomain, subject domain.RBACSubject) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -135,8 +136,8 @@ func (r *rbacRepository) RemoveSubjectPolicy(domain domain.RBACDomain, subject d
 	return nil
 }
 
-func (r *rbacRepository) AddSubjectGroupingPolicy(domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) AddSubjectGroupingPolicy(ctx context.Context, domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -148,8 +149,8 @@ func (r *rbacRepository) AddSubjectGroupingPolicy(domain domain.RBACDomain, subj
 	return nil
 }
 
-func (r *rbacRepository) RemoveSubjectGroupingPolicy(domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) RemoveSubjectGroupingPolicy(ctx context.Context, domain domain.RBACDomain, subject domain.RBACUser, object domain.RBACRole) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -161,8 +162,8 @@ func (r *rbacRepository) RemoveSubjectGroupingPolicy(domain domain.RBACDomain, s
 	return nil
 }
 
-func (r *rbacRepository) AddObjectGroupingPolicy(domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) AddObjectGroupingPolicy(ctx context.Context, domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -174,8 +175,8 @@ func (r *rbacRepository) AddObjectGroupingPolicy(domain domain.RBACDomain, child
 	return nil
 }
 
-func (r *rbacRepository) RemoveObjectGroupingPolicy(domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error {
-	e, err := r.initEnforcer()
+func (r *rbacRepository) RemoveObjectGroupingPolicy(ctx context.Context, domain domain.RBACDomain, child domain.RBACObject, parent domain.RBACObject) error {
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
@@ -187,7 +188,7 @@ func (r *rbacRepository) RemoveObjectGroupingPolicy(domain domain.RBACDomain, ch
 	return nil
 }
 
-func (r *rbacRepository) NewEnforcerWithGroupsAndUsers(groups []domain.RBACRole, users []domain.RBACUser) (*casbin.Enforcer, error) {
+func (r *rbacRepository) NewEnforcerWithGroupsAndUsers(ctx context.Context, groups []domain.RBACRole, users []domain.RBACUser) (*casbin.Enforcer, error) {
 	subjects := make([]string, 0)
 	for _, s := range groups {
 		subjects = append(subjects, s.Role())
@@ -195,7 +196,7 @@ func (r *rbacRepository) NewEnforcerWithGroupsAndUsers(groups []domain.RBACRole,
 	for _, s := range users {
 		subjects = append(subjects, s.Subject())
 	}
-	e, err := r.initEnforcer()
+	e, err := r.initEnforcer(ctx)
 	if err != nil {
 		return nil, liberrors.Errorf("r.initEnforcer. err: %w", err)
 	}
