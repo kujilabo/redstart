@@ -30,27 +30,29 @@ func outputOrganization(t *testing.T, db *gorm.DB) {
 
 func Test_appUserRepository_FindSystemOwnerByOrganizationID(t *testing.T) {
 	t.Parallel()
-	fn := func(t *testing.T, ctx context.Context, ts testService) {
-		orgID, _, _ := setupOrganization(ctx, t, ts)
-		defer teardownOrganization(t, ts, orgID)
+	for i := 0; i < 3; i++ {
+		fn := func(t *testing.T, ctx context.Context, ts testService) {
+			orgID, _, _ := setupOrganization(ctx, t, ts)
+			defer teardownOrganization(t, ts, orgID)
 
-		sysAdModel := domain.NewSystemAdminModel()
-		sysAd := testNewSystemAdmin(sysAdModel)
+			sysAdModel := domain.NewSystemAdminModel()
+			sysAd := testNewSystemAdmin(sysAdModel)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
+			appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
-		{
-			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, orgID)
-			require.NoError(t, err)
-			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
+			{
+				sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, orgID)
+				require.NoError(t, err)
+				assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
+			}
+
+			{
+				_, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, invalidOrgID)
+				assert.ErrorIs(t, err, service.ErrSystemOwnerNotFound)
+			}
 		}
-
-		{
-			_, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, invalidOrgID)
-			assert.ErrorIs(t, err, service.ErrSystemOwnerNotFound)
-		}
+		testDB(t, fn)
 	}
-	testDB(t, fn)
 }
 
 func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {

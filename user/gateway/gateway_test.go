@@ -66,7 +66,6 @@ func testDB(t *testing.T, fn func(t *testing.T, ctx context.Context, ts testServ
 }
 
 func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*domain.OrganizationID, *service.SystemOwner, *service.Owner) {
-	bg := context.Background()
 	orgName := RandString(orgNameLength)
 	sysAd, err := service.NewSystemAdmin(ctx, ts.rf)
 	require.NoError(t, err)
@@ -82,7 +81,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	authorizationManager := gateway.NewAuthorizationManager(ctx, ts.dialect, ts.db, ts.rf)
 
 	// 1. add organization
-	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)
+	orgID, err := orgRepo.AddOrganization(ctx, sysAd, orgAddParam)
 	if err != nil {
 		outputOrganization(t, ts.db)
 	}
@@ -90,7 +89,7 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	assert.Greater(t, orgID.Int(), 0)
 
 	// 2. add "system-owner" user
-	sysOwnerID, err := appUserRepo.AddSystemOwner(bg, sysAd, orgID)
+	sysOwnerID, err := appUserRepo.AddSystemOwner(ctx, sysAd, orgID)
 	require.NoError(t, err)
 	require.Greater(t, sysOwnerID.Int(), 0)
 
@@ -98,12 +97,14 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, orgName, service.IncludeGroups)
 	require.NoError(t, err)
 
-	// 3. add policy to "system-owner" userct(orgID)
+	// 3. add policy to "system-owner" user
+	t.Log(`add policy to "system-owner" user`)
 	rbacSysOwner := service.NewRBACAppUser(orgID, sysOwnerID)
 	rbacAllUserRolesObject := service.NewRBACAllUserRolesObject(orgID)
 	// - "system-owner" "can" "set" "all-user-roles"
 	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACSetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
 	require.NoError(t, err)
+	outputCasbinRule(t, ts.db)
 
 	// - "system-owner" "can" "unset" "all-user-roles"
 	err = authorizationManager.AddPolicyToUserBySystemAdmin(ctx, sysAd, orgID, rbacSysOwner, service.RBACUnsetAction, rbacAllUserRolesObject, service.RBACAllowEffect)
