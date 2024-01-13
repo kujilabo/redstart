@@ -83,6 +83,9 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 
 	// 1. add organization
 	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)
+	if err != nil {
+		outputOrganization(t, ts.db)
+	}
 	require.NoError(t, err)
 	assert.Greater(t, orgID.Int(), 0)
 
