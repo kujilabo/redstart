@@ -43,9 +43,6 @@ func Test_AddPairOfUserAndGroup(t *testing.T) {
 			orgID, _, owner := setupOrganization(ctx, t, ts)
 			defer teardownOrganization(t, ts, orgID)
 
-			outputCasbinRule(t, ts.db)
-			assert.True(t, false)
-
 			// given
 			user1 := testAddAppUser(t, ctx, ts, owner, "LOGIN_ID_1", "USERNAME_1", "PASSWORD_1")
 			user2 := testAddAppUser(t, ctx, ts, owner, "LOGIN_ID_2", "USERNAME_2", "PASSWORD_2")
