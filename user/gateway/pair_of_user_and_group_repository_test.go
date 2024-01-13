@@ -23,7 +23,7 @@ func Test_pairOfUserAndGroupRepository_FindUserGroupsByUserID(t *testing.T) {
 		group2 := testAddUserGroup(t, ctx, ts, owner, "GROUP_KEY_2", "GROUP_NAME_2", "GROUP_DESC_2")
 		group3 := testAddUserGroup(t, ctx, ts, owner, "GROUP_KEY_3", "GROUP_NAME_3", "GROUP_DESC_3")
 
-		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
+		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		// - user1 belongs to group1, group2, group3
 		for _, group := range []*service.UserGroup{group1, group2, group3} {
@@ -69,8 +69,8 @@ func Test_pairOfUserAndGroupRepository_RemovePairOfUserAndGroup(t *testing.T) {
 		// user3 := testAddAppUser(t, ctx, ts, owner, "LOGIN_ID_3", "USERNAME_3", "PASSWORD_2")
 		// group1 := testAddUserGroup(t, ctx, ts, owner, "GROUP_KEY_1", "GROUP_NAME_1", "GROUP_DESC_1")
 
-		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.db, ts.rf)
-		userGroupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
+		pairOfUserAndGroupRepo := gateway.NewPairOfUserAndGroupRepository(ctx, ts.dialect, ts.db, ts.rf)
+		userGroupRepo := gateway.NewUserGroupRepository(ctx, ts.dialect, ts.db)
 		ownerGroup, err := userGroupRepo.FindUserGroupByKey(ctx, owner, service.OwnerGroupKey)
 		require.NoError(t, err)
 

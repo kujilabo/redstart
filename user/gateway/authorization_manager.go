@@ -4,20 +4,23 @@ import (
 	"context"
 
 	liberrors "github.com/kujilabo/redstart/lib/errors"
+	libgateway "github.com/kujilabo/redstart/lib/gateway"
 	"github.com/kujilabo/redstart/user/domain"
 	"github.com/kujilabo/redstart/user/service"
 	"gorm.io/gorm"
 )
 
 type authorizationManager struct {
-	db *gorm.DB
-	rf service.RepositoryFactory
+	dialect libgateway.DialectRDBMS
+	db      *gorm.DB
+	rf      service.RepositoryFactory
 }
 
-func NewAuthorizationManager(ctx context.Context, db *gorm.DB, rf service.RepositoryFactory) service.AuthorizationManager {
+func NewAuthorizationManager(ctx context.Context, dialect libgateway.DialectRDBMS, db *gorm.DB, rf service.RepositoryFactory) service.AuthorizationManager {
 	return &authorizationManager{
-		db: db,
-		rf: rf,
+		dialect: dialect,
+		db:      db,
+		rf:      rf,
 	}
 }
 
@@ -27,7 +30,7 @@ func (m *authorizationManager) Init(ctx context.Context) error {
 }
 
 func (m *authorizationManager) AddUserToGroupBySystemAdmin(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID, appUserID *domain.AppUserID, userGroupID *domain.UserGroupID) error {
-	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.db, m.rf)
+	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.dialect, m.db, m.rf)
 
 	if err := pairOfUserAndGroupRepo.AddPairOfUserAndGroupBySystemAdmin(ctx, operator, organizationID, appUserID, userGroupID); err != nil {
 		return err
@@ -46,7 +49,7 @@ func (m *authorizationManager) AddUserToGroupBySystemAdmin(ctx context.Context, 
 	return nil
 }
 func (m *authorizationManager) AddUserToGroup(ctx context.Context, operator service.AppUserInterface, appUserID *domain.AppUserID, userGroupID *domain.UserGroupID) error {
-	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.db, m.rf)
+	pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, m.dialect, m.db, m.rf)
 
 	if err := pairOfUserAndGroupRepo.AddPairOfUserAndGroup(ctx, operator, appUserID, userGroupID); err != nil {
 		return err

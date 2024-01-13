@@ -17,8 +17,9 @@ var (
 )
 
 type pairOfUserAndGroupRepository struct {
-	db *gorm.DB
-	rf service.RepositoryFactory
+	dialect libgateway.DialectRDBMS
+	db      *gorm.DB
+	rf      service.RepositoryFactory
 }
 
 type pairOfUserAndGroupEntity struct {
@@ -32,10 +33,11 @@ func (u *pairOfUserAndGroupEntity) TableName() string {
 	return PairOfUserAndGroupTableName
 }
 
-func NewPairOfUserAndGroupRepository(ctx context.Context, db *gorm.DB, rf service.RepositoryFactory) service.PairOfUserAndGroupRepository {
+func NewPairOfUserAndGroupRepository(ctx context.Context, dialect libgateway.DialectRDBMS, db *gorm.DB, rf service.RepositoryFactory) service.PairOfUserAndGroupRepository {
 	return &pairOfUserAndGroupRepository{
-		db: db,
-		rf: rf,
+		dialect: dialect,
+		db:      db,
+		rf:      rf,
 	}
 }
 
@@ -137,11 +139,11 @@ func (r *pairOfUserAndGroupRepository) RemovePairOfUserAndGroup(ctx context.Cont
 	_, span := tracer.Start(ctx, "pairOfUserAndGroupRepository.RemovePairOfUserAndGroup")
 	defer span.End()
 
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: operator.OrganizationID()}
 	db := wrappedDB.
 		WherePairOfUserAndGroup().
-		Where("`app_user_id` = ?", appUserID.Int()).
-		Where("`user_group_id` = ?", userGroupID.Int()).
+		Where("app_user_id = ?", appUserID.Int()).
+		Where("user_group_id = ?", userGroupID.Int()).
 		db
 	result := db.Delete(&pairOfUserAndGroupEntity{})
 	if result.Error != nil {
@@ -179,7 +181,7 @@ func (r *pairOfUserAndGroupRepository) RemovePairOfUserAndGroup(ctx context.Cont
 // /* userGroupKey string*/
 // ) error {
 // 	// remove pairOfOuserAndRole
-// 	wrappedDB := wrappedDB{db: r.db, organizationID: organizationID}
+// 	wrappedDB := wrappedDB{dialect: r.dialect,db: r.db, organizationID: organizationID}
 // 	db := wrappedDB.
 // 		WherePairOfUserAndGroup().
 // 		Where("`app_user_id` = ?", appUserID.Int()).
@@ -242,12 +244,12 @@ func (r *pairOfUserAndGroupRepository) FindUserGroupsByUserID(ctx context.Contex
 	userGroups := []userGroupEntity{}
 	if result := r.db.Table("user_group").Select("user_group.*").
 		Where("user_group.organization_id = ?", operator.OrganizationID().Int()).
-		Where("user_group.removed = 0").
+		Where("user_group.removed = ?", r.dialect.BoolDefaultValue()).
 		Where("app_user.organization_id = ?", operator.OrganizationID().Int()).
-		Where("app_user.id = ? and app_user.removed = 0", appUserID.Int()).
+		Where("app_user.id = ? and app_user.removed = ?", appUserID.Int(), r.dialect.BoolDefaultValue()).
 		Joins("inner join user_n_group on user_group.id = user_n_group.user_group_id").
 		Joins("inner join app_user on user_n_group.app_user_id = app_user.id").
-		Order("`user_group`.`key`").
+		Order("user_group.key_name").
 		Find(&userGroups); result.Error != nil {
 		return nil, result.Error
 	}

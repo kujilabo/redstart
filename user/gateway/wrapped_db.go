@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
+	libgateway "github.com/kujilabo/redstart/lib/gateway"
 	"github.com/kujilabo/redstart/user/domain"
 )
 
@@ -13,6 +14,7 @@ type HasTableName interface {
 }
 
 type wrappedDB struct {
+	dialect        libgateway.DialectRDBMS
 	db             *gorm.DB
 	organizationID *domain.OrganizationID
 }
@@ -38,12 +40,12 @@ func (x *wrappedDB) Joins(query string, args ...interface{}) *wrappedDB {
 }
 
 func (x *wrappedDB) WhereOrganizationID(table HasTableName, organizationID *domain.OrganizationID) *wrappedDB {
-	x.db = x.db.Where(fmt.Sprintf("%s.`organization_id` = ?", table.TableName()), organizationID.Int())
+	x.db = x.db.Where(fmt.Sprintf("%s.organization_id = ?", table.TableName()), organizationID.Int())
 	return x
 }
 
 func (x *wrappedDB) WhereNotRemoved(table HasTableName) *wrappedDB {
-	x.db = x.db.Where(fmt.Sprintf("%s.`removed` = 0", table.TableName()))
+	x.db = x.db.Where(fmt.Sprintf("%s.removed = ?", table.TableName()), x.dialect.BoolDefaultValue())
 	return x
 }
 

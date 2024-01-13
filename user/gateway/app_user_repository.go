@@ -13,8 +13,9 @@ import (
 )
 
 type appUserRepository struct {
-	db *gorm.DB
-	rf service.RepositoryFactory
+	dialect libgateway.DialectRDBMS
+	db      *gorm.DB
+	rf      service.RepositoryFactory
 }
 
 type appUserEntity struct {
@@ -131,10 +132,11 @@ func (e *appUserEntity) toAppUser(ctx context.Context, rf service.RepositoryFact
 	return appUser, nil
 }
 
-func NewAppUserRepository(ctx context.Context, driverName string, db *gorm.DB, rf service.RepositoryFactory) service.AppUserRepository {
+func NewAppUserRepository(ctx context.Context, dialect libgateway.DialectRDBMS, db *gorm.DB, rf service.RepositoryFactory) service.AppUserRepository {
 	return &appUserRepository{
-		db: db,
-		rf: rf,
+		dialect: dialect,
+		db:      db,
+		rf:      rf,
 	}
 }
 
@@ -143,8 +145,8 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationID(ctx context.Context,
 	defer span.End()
 
 	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: organizationID}
-	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", service.SystemOwnerLoginID).db
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: organizationID}
+	db := wrappedDB.WhereAppUser().Where("app_user.login_id = ?", service.SystemOwnerLoginID).db
 	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, liberrors.Errorf("system owner not found. organization ID: %d, err: %w", organizationID, service.ErrSystemOwnerNotFound)
@@ -161,7 +163,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 
 	appUserE := appUserEntity{}
 	if result := r.db.Table("organization").Select("app_user.*").
-		Where("organization.name = ? and app_user.removed = 0", organizationName).
+		Where("organization.name = ? and app_user.removed = ?", organizationName, r.dialect.BoolDefaultValue()).
 		Where("login_id = ?", service.SystemOwnerLoginID).
 		Joins("inner join app_user on organization.id = app_user.organization_id").
 		First(&appUserE); result.Error != nil {
@@ -180,7 +182,7 @@ func (r *appUserRepository) FindSystemOwnerByOrganizationName(ctx context.Contex
 	userGroups := []*domain.UserGroupModel{}
 	for _, option := range options {
 		if option == service.IncludeGroups {
-			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
+			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.dialect, r.db, r.rf)
 			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUser, appUser.AppUserID())
 			if err != nil {
 				return nil, err
@@ -198,8 +200,8 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 	defer span.End()
 
 	appUserE := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
-	db := wrappedDB.WhereAppUser().Where("`app_user`.`id` = ?", id.Int()).db
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: operator.OrganizationID()}
+	db := wrappedDB.WhereAppUser().Where("app_user.id = ?", id.Int()).db
 	if result := db.First(&appUserE); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrAppUserNotFound
@@ -217,7 +219,7 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 
 	for _, option := range options {
 		if option == service.IncludeGroups {
-			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.db, r.rf)
+			pairOfUserAndGroupRepo := NewPairOfUserAndGroupRepository(ctx, r.dialect, r.db, r.rf)
 			userGroupsTmp, err := pairOfUserAndGroupRepo.FindUserGroupsByUserID(ctx, appUser, appUser.AppUserID())
 			if err != nil {
 				return nil, err
@@ -235,8 +237,8 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator s
 	defer span.End()
 
 	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
-	db := wrappedDB.WhereAppUser().Where("`app_user`.`login_id` = ?", loginID).db
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: operator.OrganizationID()}
+	db := wrappedDB.WhereAppUser().Where("app_user.login_id = ?", loginID).db
 	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, service.ErrAppUserNotFound
@@ -253,15 +255,15 @@ func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator ser
 	defer span.End()
 
 	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{db: r.db, organizationID: operator.OrganizationID()}
-	db := wrappedDB.Table("`app_user`").Select("`app_user`.*").
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: operator.OrganizationID()}
+	db := wrappedDB.Table("app_user").Select("app_user.*").
 		WherePairOfUserAndGroup().
 		WhereUserGroup().
 		WhereAppUser().
-		Where("`app_user`.`login_id` = ?", loginID).
-		Where("`user_group`.`key` = ? ", service.OwnerGroupKey).
-		Joins("inner join `user_n_group` on `app_user`.`id` = `user_n_group`.`app_user_id`").
-		Joins("inner join `user_group` on `user_n_group`.`user_group_id` = `user_group`.`id`").
+		Where("app_user.login_id = ?", loginID).
+		Where("user_group.key_name = ? ", service.OwnerGroupKey).
+		Joins("inner join user_n_group on app_user.id = user_n_group.app_user_id").
+		Joins("inner join user_group on user_n_group.user_group_id = user_group.id").
 		db
 
 	if result := db.First(&appUser); result.Error != nil {

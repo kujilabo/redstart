@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	libdomain "github.com/kujilabo/redstart/lib/domain"
+	libgateway "github.com/kujilabo/redstart/lib/gateway"
 	testlibgateway "github.com/kujilabo/redstart/testlib/gateway"
 	"github.com/kujilabo/redstart/user/domain"
 	"github.com/kujilabo/redstart/user/gateway"
@@ -21,9 +22,9 @@ import (
 const orgNameLength = 8
 
 type testService struct {
-	driverName string
-	db         *gorm.DB
-	rf         service.RepositoryFactory
+	dialect libgateway.DialectRDBMS
+	db      *gorm.DB
+	rf      service.RepositoryFactory
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -46,18 +47,18 @@ func RandString(n int) string {
 
 func testDB(t *testing.T, fn func(t *testing.T, ctx context.Context, ts testService)) {
 	ctx := context.Background()
-	for driverName, db := range testlibgateway.ListDB() {
-		driverName := driverName
+	for dialect, db := range testlibgateway.ListDB() {
+		dialect := dialect
 		db := db
-		t.Run(driverName, func(t *testing.T) {
+		t.Run(dialect.Name(), func(t *testing.T) {
 			// t.Parallel()
 			sqlDB, err := db.DB()
 			require.NoError(t, err)
 			defer sqlDB.Close()
 
-			rf, err := gateway.NewRepositoryFactory(ctx, driverName, db, loc)
+			rf, err := gateway.NewRepositoryFactory(ctx, dialect, dialect.Name(), db, loc)
 			require.NoError(t, err)
-			testService := testService{driverName: driverName, db: db, rf: rf}
+			testService := testService{dialect: dialect, db: db, rf: rf}
 
 			fn(t, ctx, testService)
 		})
@@ -76,9 +77,9 @@ func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*doma
 	require.NoError(t, err)
 
 	orgRepo := gateway.NewOrganizationRepository(ctx, ts.db)
-	appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
-	userGorupRepo := gateway.NewUserGroupRepository(ctx, ts.db)
-	authorizationManager := gateway.NewAuthorizationManager(ctx, ts.db, ts.rf)
+	appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
+	userGorupRepo := gateway.NewUserGroupRepository(ctx, ts.dialect, ts.db)
+	authorizationManager := gateway.NewAuthorizationManager(ctx, ts.dialect, ts.db, ts.rf)
 
 	// 1. add organization
 	orgID, err := orgRepo.AddOrganization(bg, sysAd, orgAddParam)

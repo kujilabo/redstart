@@ -8,6 +8,20 @@ jobs:
         go-version: [1.21.x]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:15.5-alpine3.19
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: password
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Setup MySQL
         uses: mirromutth/mysql-action@v1.1
@@ -27,6 +41,11 @@ jobs:
 
       - name: Test
         run: make test
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: postgres
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5433
 
       - name: Coverage
         uses: codecov/codecov-action@v3

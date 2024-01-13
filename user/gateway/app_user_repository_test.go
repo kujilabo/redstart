@@ -20,7 +20,7 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationID(t *testing.T) {
 		sysAdModel := domain.NewSystemAdminModel()
 		sysAd := testNewSystemAdmin(sysAdModel)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		{
 			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, orgID)
@@ -46,7 +46,7 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {
 		sysAdModel := domain.NewSystemAdminModel()
 		sysAd := testNewSystemAdmin(sysAdModel)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		{
 			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, org.Name())
@@ -71,7 +71,7 @@ func Test_appUserRepository_FindAppUserByID(t *testing.T) {
 		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		appUserID, err := appUserRepo.AddAppUser(ctx, owner, appUserAddParam)
 		require.NoError(t, err)
@@ -101,7 +101,7 @@ func Test_appUserRepository_FindAppUserByLoginID(t *testing.T) {
 		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		appUserID, err := appUserRepo.AddAppUser(ctx, owner, appUserAddParam)
 		require.NoError(t, err)
@@ -131,7 +131,7 @@ func Test_appUserRepository_FindOwnerByLoginID(t *testing.T) {
 		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		appUserID, err := appUserRepo.AddAppUser(ctx, owner, appUserAddParam)
 		require.NoError(t, err)

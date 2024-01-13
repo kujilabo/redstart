@@ -13,7 +13,7 @@ create table app_user (
 ,provider_id varchar(40)
 ,provider_access_token text
 ,provider_refresh_token text
-,removed int not null
+,removed bool not null
 ,primary key(id)
 ,unique(organization_id, login_id)
 ,foreign key(organization_id) references organization(id) on delete cascade
