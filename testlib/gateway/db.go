@@ -11,15 +11,24 @@ import (
 	"gorm.io/gorm"
 
 	liberrors "github.com/kujilabo/redstart/lib/errors"
+	libgateway "github.com/kujilabo/redstart/lib/gateway"
 )
 
-func ListDB() map[string]*gorm.DB {
-	list := make(map[string]*gorm.DB)
+func ListDB() map[libgateway.DialectRDBMS]*gorm.DB {
+	list := make(map[libgateway.DialectRDBMS]*gorm.DB)
 	m, err := openMySQLForTest()
 	if err != nil {
 		panic(err)
 	}
-	list["mysql"] = m
+	mysql := libgateway.DialectMySQL{}
+	list[&mysql] = m
+
+	p, err := openPostgresForTest()
+	if err != nil {
+		panic(err)
+	}
+	postgres := libgateway.DialectPostgres{}
+	list[&postgres] = p
 
 	// s, err := openSQLiteForTest()
 	// if err != nil {

@@ -17,6 +17,7 @@ import (
 func Test_organizationRepository_GetOrganization(t *testing.T) {
 	t.Parallel()
 	fn := func(t *testing.T, ctx context.Context, ts testService) {
+		// require.Equal(t, ts.dialect.BoolDefaultValue(), "false")
 		orgID, _, _ := setupOrganization(ctx, t, ts)
 		defer teardownOrganization(t, ts, orgID)
 

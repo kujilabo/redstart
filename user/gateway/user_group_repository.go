@@ -19,7 +19,7 @@ type userGroupEntity struct {
 	BaseModelEntity
 	ID             int
 	OrganizationID int
-	Key            string
+	KeyName        string
 	Name           string
 	Description    string
 	Removed        bool
@@ -45,7 +45,7 @@ func (e *userGroupEntity) toUserGroupModel() (*domain.UserGroupModel, error) {
 		return nil, liberrors.Errorf("domain.NewOrganizationID. err: %w", err)
 	}
 
-	userGroupModel, err := domain.NewUserGroupModel(baseModel, userGroupID, organizationID, e.Key, e.Name, e.Description)
+	userGroupModel, err := domain.NewUserGroupModel(baseModel, userGroupID, organizationID, e.KeyName, e.Name, e.Description)
 	if err != nil {
 		return nil, liberrors.Errorf("domain.NewUserGroupModel. err: %w", err)
 	}
@@ -68,12 +68,14 @@ func (e *userGroupEntity) toUserGroup() (*service.UserGroup, error) {
 }
 
 type userGroupRepository struct {
-	db *gorm.DB
+	dialect libgateway.DialectRDBMS
+	db      *gorm.DB
 }
 
-func NewUserGroupRepository(ctx context.Context, db *gorm.DB) service.UserGroupRepository {
+func NewUserGroupRepository(ctx context.Context, dialect libgateway.DialectRDBMS, db *gorm.DB) service.UserGroupRepository {
 	return &userGroupRepository{
-		db: db,
+		dialect: dialect,
+		db:      db,
 	}
 }
 
@@ -107,7 +109,7 @@ func (r *userGroupRepository) FindSystemOwnerGroup(ctx context.Context, operator
 	userGroup := userGroupEntity{}
 	if result := r.db.Where(&userGroupEntity{
 		OrganizationID: organizationID.Int(),
-		Key:            service.SystemOwnerGroupKey,
+		KeyName:        service.SystemOwnerGroupKey,
 	}).First(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
@@ -120,7 +122,7 @@ func (r *userGroupRepository) FindUserGroupByID(ctx context.Context, operator se
 
 	userGroup := userGroupEntity{}
 	if result := r.db.Where("organization_id = ?", operator.OrganizationID().Int()).
-		Where("id = ? and removed = 0", userGroupID.Int()).
+		Where("id = ? and removed = ?", userGroupID.Int(), r.dialect.BoolDefaultValue()).
 		First(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
@@ -132,8 +134,8 @@ func (r *userGroupRepository) FindUserGroupByKey(ctx context.Context, operator s
 	defer span.End()
 
 	userGroup := userGroupEntity{}
-	if result := r.db.Where("`organization_id` = ?", operator.OrganizationID().Int()).
-		Where("`key` = ? and `removed` = 0", key).
+	if result := r.db.Where("organization_id = ?", operator.OrganizationID().Int()).
+		Where("key_name = ? and removed = ?", key, r.dialect.BoolDefaultValue()).
 		First(&userGroup); result.Error != nil {
 		return nil, result.Error
 	}
@@ -151,7 +153,7 @@ func (r *userGroupRepository) AddSystemOwnerGroup(ctx context.Context, operator 
 			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
-		Key:            service.SystemOwnerGroupKey,
+		KeyName:        service.SystemOwnerGroupKey,
 		Name:           service.SystemOwnerGroupName,
 	}
 	if result := r.db.Create(&userGroup); result.Error != nil {
@@ -177,7 +179,7 @@ func (r *userGroupRepository) AddOwnerGroup(ctx context.Context, operator servic
 			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: organizationID.Int(),
-		Key:            service.OwnerGroupKey,
+		KeyName:        service.OwnerGroupKey,
 		Name:           service.OwnerGroupName,
 	}
 	if result := r.db.Create(&userGroup); result.Error != nil {
@@ -203,7 +205,7 @@ func (r *userGroupRepository) AddUserGroup(ctx context.Context, operator service
 			UpdatedBy: operator.AppUserID().Int(),
 		},
 		OrganizationID: operator.OrganizationID().Int(),
-		Key:            parameter.Key(),
+		KeyName:        parameter.Key(),
 		Name:           parameter.Name(),
 		Description:    parameter.Description(),
 	}

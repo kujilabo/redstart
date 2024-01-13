@@ -2,38 +2,57 @@ package gateway_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/kujilabo/redstart/user/domain"
 	"github.com/kujilabo/redstart/user/gateway"
 	"github.com/kujilabo/redstart/user/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
+
+func outputOrganization(t *testing.T, db *gorm.DB) {
+	var results []gateway.OrganizationEntity
+	if result := db.Find(&results); result.Error != nil {
+		assert.Fail(t, result.Error.Error())
+	}
+	var s string
+	s += "\n   id,version,           created_at,          updated_at,created_by,updated_by,      name,"
+	for i := range results {
+		result := &results[i]
+		s += fmt.Sprintf("\n%5d,%8d,%20s,%20s,%10d,%10d,%10s", result.ID, result.Version, result.CreatedAt.Format(time.RFC3339), result.UpdatedAt.Format(time.RFC3339), result.CreatedBy, result.UpdatedBy, result.Name)
+	}
+	t.Log(s)
+}
 
 func Test_appUserRepository_FindSystemOwnerByOrganizationID(t *testing.T) {
 	t.Parallel()
-	fn := func(t *testing.T, ctx context.Context, ts testService) {
-		orgID, _, _ := setupOrganization(ctx, t, ts)
-		defer teardownOrganization(t, ts, orgID)
+	for i := 0; i < 3; i++ {
+		fn := func(t *testing.T, ctx context.Context, ts testService) {
+			orgID, _, _ := setupOrganization(ctx, t, ts)
+			defer teardownOrganization(t, ts, orgID)
 
-		sysAdModel := domain.NewSystemAdminModel()
-		sysAd := testNewSystemAdmin(sysAdModel)
+			sysAdModel := domain.NewSystemAdminModel()
+			sysAd := testNewSystemAdmin(sysAdModel)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+			appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
-		{
-			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, orgID)
-			require.NoError(t, err)
-			assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
+			{
+				sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, orgID)
+				require.NoError(t, err)
+				assert.Equal(t, service.SystemOwnerLoginID, sysOwner.LoginID())
+			}
+
+			{
+				_, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, invalidOrgID)
+				assert.ErrorIs(t, err, service.ErrSystemOwnerNotFound)
+			}
 		}
-
-		{
-			_, err := appUserRepo.FindSystemOwnerByOrganizationID(ctx, sysAd, invalidOrgID)
-			assert.ErrorIs(t, err, service.ErrSystemOwnerNotFound)
-		}
+		testDB(t, fn)
 	}
-	testDB(t, fn)
 }
 
 func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {
@@ -46,7 +65,7 @@ func Test_appUserRepository_FindSystemOwnerByOrganizationName(t *testing.T) {
 		sysAdModel := domain.NewSystemAdminModel()
 		sysAd := testNewSystemAdmin(sysAdModel)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		{
 			sysOwner, err := appUserRepo.FindSystemOwnerByOrganizationName(ctx, sysAd, org.Name())
@@ -71,7 +90,7 @@ func Test_appUserRepository_FindAppUserByID(t *testing.T) {
 		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		appUserID, err := appUserRepo.AddAppUser(ctx, owner, appUserAddParam)
 		require.NoError(t, err)
@@ -101,7 +120,7 @@ func Test_appUserRepository_FindAppUserByLoginID(t *testing.T) {
 		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		appUserID, err := appUserRepo.AddAppUser(ctx, owner, appUserAddParam)
 		require.NoError(t, err)
@@ -131,7 +150,7 @@ func Test_appUserRepository_FindOwnerByLoginID(t *testing.T) {
 		appUserAddParam, err := service.NewAppUserAddParameter("LOGIN_ID", "USERNAME", "PASSWORD", "", "", "", "")
 		require.NoError(t, err)
 
-		appUserRepo := gateway.NewAppUserRepository(ctx, ts.driverName, ts.db, ts.rf)
+		appUserRepo := gateway.NewAppUserRepository(ctx, ts.dialect, ts.db, ts.rf)
 
 		appUserID, err := appUserRepo.AddAppUser(ctx, owner, appUserAddParam)
 		require.NoError(t, err)
