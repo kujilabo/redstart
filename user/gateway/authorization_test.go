@@ -31,8 +31,7 @@ func Test_AddPairOfUserAndGroup(t *testing.T) {
 		ok, err := authorizationManager.Authorize(ctx, owner, service.RBACSetAction, rbacRoleObject)
 		assert.NoError(t, err)
 		// then
-		// - owner can make anyone belong to owner-group
-		assert.True(t, ok)
+		assert.False(t, ok, "owner should be able to make anyone belong to owner-group")
 
 		// when
 		ok, err = authorizationManager.Authorize(ctx, user2, service.RBACSetAction, rbacRoleObject)

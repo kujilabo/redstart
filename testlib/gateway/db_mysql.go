@@ -41,7 +41,7 @@ func openMySQLForTest() (*gorm.DB, error) {
 	db, err := gorm.Open(gorm_mysql.Open(dsn), &gorm.Config{
 		Logger: slog_gorm.New(
 			slog_gorm.WithLogger(logger), // Optional, use slog.Default() by default
-			slog_gorm.WithTraceAll(),     // trace all messages
+			// slog_gorm.WithTraceAll(),     // trace all messages
 		),
 	})
 	if err != nil {
