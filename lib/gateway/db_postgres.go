@@ -2,8 +2,8 @@ package gateway
 
 import (
 	"database/sql"
-	"embed"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"time"
 
@@ -29,7 +29,7 @@ func OpenPostgres(username, password, host string, port int, database string, lo
 	})
 }
 
-func MigratePostgresDB(db *gorm.DB, sqlFS embed.FS) error {
+func MigratePostgresDB(db *gorm.DB, sqlFS fs.FS) error {
 	driverName := "postgres"
 	sourceDriver, err := iofs.New(sqlFS, driverName)
 	if err != nil {

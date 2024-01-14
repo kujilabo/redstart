@@ -2,8 +2,8 @@ package gateway
 
 import (
 	"database/sql"
-	"embed"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"time"
 
@@ -40,7 +40,7 @@ func OpenMySQL(username, password, host string, port int, database string, logge
 	})
 }
 
-func MigrateMySQLDB(db *gorm.DB, sqlFS embed.FS) error {
+func MigrateMySQLDB(db *gorm.DB, sqlFS fs.FS) error {
 	driverName := "mysql"
 	sourceDriver, err := iofs.New(sqlFS, driverName)
 	if err != nil {
