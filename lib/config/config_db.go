@@ -2,7 +2,7 @@ package config
 
 import (
 	"database/sql"
-	"embed"
+	"io/fs"
 	"log/slog"
 	"os"
 
@@ -41,7 +41,7 @@ type DBConfig struct {
 	Migration  bool            `yaml:"migration"`
 }
 
-func InitDB(cfg *DBConfig, sqlFS embed.FS) (libgateway.DialectRDBMS, *gorm.DB, *sql.DB, error) {
+func InitDB(cfg *DBConfig, sqlFS fs.FS) (libgateway.DialectRDBMS, *gorm.DB, *sql.DB, error) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
