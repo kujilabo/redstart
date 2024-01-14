@@ -41,10 +41,53 @@ type DBConfig struct {
 	Migration  bool            `yaml:"migration"`
 }
 
-func InitDB(cfg *DBConfig, sqlFS fs.FS) (libgateway.DialectRDBMS, *gorm.DB, *sql.DB, error) {
+type mergedFS struct {
+	fss     []fs.FS
+	entries []fs.DirEntry
+}
+
+func newMergedFS(driverName string, fss ...fs.FS) (*mergedFS, error) {
+	entries := make([]fs.DirEntry, 0)
+	for i := range fss {
+		e, err := fs.ReadDir(fss[i], driverName)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, e...)
+	}
+
+	return &mergedFS{
+		fss:     fss,
+		entries: entries,
+	}, nil
+}
+
+func (f *mergedFS) Open(name string) (fs.File, error) {
+	var file fs.File
+	var err error
+	for i := range f.fss {
+		file, err = f.fss[i].Open(name)
+		if err == nil {
+			return file, nil
+		}
+	}
+
+	return nil, err
+}
+
+func (f *mergedFS) ReadDir(name string) ([]fs.DirEntry, error) {
+	return f.entries, nil
+}
+
+func InitDB(cfg *DBConfig, sqlFSs ...fs.FS) (libgateway.DialectRDBMS, *gorm.DB, *sql.DB, error) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
+	mergedFS, err := newMergedFS(cfg.DriverName, sqlFSs...)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
 	switch cfg.DriverName {
 	// case "sqlite3":
 	// 	db, err := libgateway.OpenSQLite("./"+cfg.SQLite3.File, logger)
@@ -83,7 +126,7 @@ func InitDB(cfg *DBConfig, sqlFS fs.FS) (libgateway.DialectRDBMS, *gorm.DB, *sql
 			return nil, nil, nil, err
 		}
 
-		if err := libgateway.MigrateMySQLDB(db, sqlFS); err != nil {
+		if err := libgateway.MigrateMySQLDB(db, mergedFS); err != nil {
 			return nil, nil, nil, liberrors.Errorf("failed to MigrateMySQLDB. err: %w", err)
 		}
 
@@ -104,7 +147,7 @@ func InitDB(cfg *DBConfig, sqlFS fs.FS) (libgateway.DialectRDBMS, *gorm.DB, *sql
 			return nil, nil, nil, err
 		}
 
-		if err := libgateway.MigratePostgresDB(db, sqlFS); err != nil {
+		if err := libgateway.MigratePostgresDB(db, mergedFS); err != nil {
 			return nil, nil, nil, liberrors.Errorf("failed to MigrateMySQLDB. err: %w", err)
 		}
 
