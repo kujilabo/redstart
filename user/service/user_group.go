@@ -3,6 +3,7 @@ package service
 import (
 	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
+
 	"github.com/kujilabo/redstart/user/domain"
 )
 

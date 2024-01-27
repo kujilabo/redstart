@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	liberrors "github.com/kujilabo/redstart/lib/errors"
@@ -199,8 +200,15 @@ func (r *appUserRepository) FindAppUserByID(ctx context.Context, operator servic
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByID")
 	defer span.End()
 
+	return r.findAppUserByID(ctx, operator.OrganizationID(), id, options...)
+}
+
+func (r *appUserRepository) findAppUserByID(ctx context.Context, organizationID *domain.OrganizationID, id *domain.AppUserID, options ...service.Option) (*service.AppUser, error) {
+	_, span := tracer.Start(ctx, "appUserRepository.findAppUserByID")
+	defer span.End()
+
 	appUserE := appUserEntity{}
-	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: operator.OrganizationID()}
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: organizationID}
 	db := wrappedDB.WhereAppUser().Where("app_user.id = ?", id.Int()).db
 	if result := db.First(&appUserE); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -236,8 +244,27 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator s
 	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByLoginID")
 	defer span.End()
 
+	return r.findAppUserByLoginID(ctx, operator.OrganizationID(), loginID)
+}
+
+func (r *appUserRepository) findAppUserByLoginID(ctx context.Context, organizationID *domain.OrganizationID, loginID string) (*service.AppUser, error) {
+	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByLoginID")
+	defer span.End()
+
+	appUserEntity, err := r.findAppUserEntityByLoginID(ctx, organizationID, loginID)
+	if err != nil {
+		return nil, err
+	}
+
+	return appUserEntity.toAppUser(ctx, r.rf, nil)
+}
+
+func (r *appUserRepository) findAppUserEntityByLoginID(ctx context.Context, organizationID *domain.OrganizationID, loginID string) (*appUserEntity, error) {
+	_, span := tracer.Start(ctx, "appUserRepository.FindAppUserByLoginID")
+	defer span.End()
+
 	appUser := appUserEntity{}
-	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: operator.OrganizationID()}
+	wrappedDB := wrappedDB{dialect: r.dialect, db: r.db, organizationID: organizationID}
 	db := wrappedDB.WhereAppUser().Where("app_user.login_id = ?", loginID).db
 	if result := db.First(&appUser); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -247,7 +274,7 @@ func (r *appUserRepository) FindAppUserByLoginID(ctx context.Context, operator s
 		return nil, result.Error
 	}
 
-	return appUser.toAppUser(ctx, r.rf, nil)
+	return &appUser, nil
 }
 
 func (r *appUserRepository) FindOwnerByLoginID(ctx context.Context, operator service.SystemOwnerInterface, loginID string) (*service.Owner, error) {
@@ -345,4 +372,20 @@ func (r *appUserRepository) AddSystemOwner(ctx context.Context, operator service
 	}
 
 	return appUserID, nil
+}
+
+func (r *appUserRepository) VerifyPassword(ctx context.Context, operator service.SystemAdminInterface, organizationID *domain.OrganizationID, loginID, password string) (bool, error) {
+	appUserEntity, err := r.findAppUserEntityByLoginID(ctx, organizationID, loginID)
+	if err != nil {
+		return false, err
+	}
+	return ComparePasswords(appUserEntity.HashedPassword, password), nil
+}
+
+func ComparePasswords(hashedPassword string, plainPassword string) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword)); err != nil {
+		return false
+	}
+
+	return true
 }

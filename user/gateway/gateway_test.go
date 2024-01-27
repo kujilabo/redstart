@@ -65,6 +65,16 @@ func testDB(t *testing.T, fn func(t *testing.T, ctx context.Context, ts testServ
 	}
 }
 
+func testOrganization(t *testing.T, fn func(t *testing.T, ctx context.Context, ts testService, orgID *domain.OrganizationID, sysOwner *service.SystemOwner, owner *service.Owner)) {
+	t.Helper()
+	testDB(t, func(t *testing.T, ctx context.Context, ts testService) {
+		orgID, sysOwner, owner := setupOrganization(ctx, t, ts)
+		defer teardownOrganization(t, ts, orgID)
+
+		fn(t, ctx, ts, orgID, sysOwner, owner)
+	})
+}
+
 func setupOrganization(ctx context.Context, t *testing.T, ts testService) (*domain.OrganizationID, *service.SystemOwner, *service.Owner) {
 	orgName := RandString(orgNameLength)
 	sysAd, err := service.NewSystemAdmin(ctx, ts.rf)

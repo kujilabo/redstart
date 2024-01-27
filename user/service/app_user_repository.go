@@ -92,6 +92,8 @@ type AppUserRepository interface {
 
 	AddSystemOwner(ctx context.Context, operator SystemAdminInterface, organizationID *domain.OrganizationID) (*domain.AppUserID, error)
 
+	VerifyPassword(ctx context.Context, operator SystemAdminInterface, organizationID *domain.OrganizationID, loginID, password string) (bool, error)
+
 	// AddFirstOwner(ctx context.Context, operator domain.SystemOwnerModel, param FirstOwnerAddParameter) (domain.AppUserID, error)
 
 	// FindAppUserIDs(ctx context.Context, operator domain.SystemOwnerModel, pageNo, pageSize int) ([]domain.AppUserID, error)
