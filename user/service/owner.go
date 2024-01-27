@@ -4,6 +4,7 @@ import (
 	"context"
 
 	liberrors "github.com/kujilabo/redstart/lib/errors"
+
 	"github.com/kujilabo/redstart/user/domain"
 )
 

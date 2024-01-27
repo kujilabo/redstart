@@ -6,6 +6,7 @@ import (
 	libdomain "github.com/kujilabo/redstart/lib/domain"
 	liberrors "github.com/kujilabo/redstart/lib/errors"
 	liblog "github.com/kujilabo/redstart/lib/log"
+
 	"github.com/kujilabo/redstart/user/domain"
 )
 
