@@ -12,7 +12,7 @@ import (
 
 var (
 	lock            sync.Mutex
-	defaultLogger   *slog.Logger
+	DefaultLogger   *slog.Logger
 	DefaultLogLevel slog.Level
 	LogHandlers     map[slog.Level]slog.Handler        = make(map[slog.Level]slog.Handler)
 	Loggers         map[domain.ContextKey]*slog.Logger = make(map[domain.ContextKey]*slog.Logger)
@@ -25,7 +25,7 @@ func init() {
 		})}
 	}
 
-	defaultLogger = slog.New(LogHandlers[slog.LevelWarn])
+	DefaultLogger = slog.New(LogHandlers[slog.LevelWarn])
 }
 
 func WithLoggerName(ctx context.Context, val domain.ContextKey) context.Context {
@@ -43,8 +43,8 @@ func GetLoggerFromContext(ctx context.Context, key domain.ContextKey) *slog.Logg
 	defer lock.Unlock()
 
 	if _, ok := Loggers[key]; !ok {
-		defaultLogger.DebugContext(ctx, fmt.Sprintf("logger not found. logger: %s", key))
-		return defaultLogger
+		DefaultLogger.DebugContext(ctx, fmt.Sprintf("logger not found. logger: %s", key))
+		return DefaultLogger
 	}
 
 	return Loggers[key]
